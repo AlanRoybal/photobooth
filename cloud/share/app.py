@@ -95,6 +95,7 @@ STYLE = """
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body { margin: 0; min-height: 100vh; background: #0b0b1a; color: #fff; text-align: center;
     font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; padding: 24px 18px 40px; }
   h1 { font-size: 24px; margin: 4px 0 18px; }
