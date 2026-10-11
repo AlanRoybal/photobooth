@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Photobooth</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<img id="live" alt="">
+
+<section id="start" class="screen active">
+  <h1 id="title">Photobooth</h1>
+  <p class="pulse">Tap anywhere to start</p>
+</section>
+
+<section id="instructions" class="screen">
+  <div id="arrow" class="arrow">&#8593;</div>
+  <h2>Look up here at the camera</h2>
+  <ol>
+    <li>Get everyone in the shot</li>
+    <li>Tap Ready, then pose during the countdown</li>
+  </ol>
+  <button id="ready" class="primary big">Ready</button>
+</section>
+
+<section id="countdown" class="screen">
+  <div id="count"></div>
+  <div id="flash"></div>
+</section>
+
+<section id="review" class="screen">
+  <img id="shot" alt="Your photo">
+  <div class="actions">
+    <button id="retake" class="secondary">Retake</button>
+    <button id="next" class="primary">Next</button>
+  </div>
+</section>
+
+<section id="frames" class="screen">
+  <h2>Pick a frame</h2>
+  <div class="carousel">
+    <button id="prev-frame" class="nav">&#8249;</button>
+    <div id="track-window"><div id="track"></div></div>
+    <button id="next-frame" class="nav">&#8250;</button>
+  </div>
+  <div id="dots"></div>
+  <div class="actions">
+    <button id="frames-back" class="secondary">Back</button>
+    <button id="confirm" class="primary">Confirm</button>
+  </div>
+</section>
+
+<section id="printing" class="screen">
+  <div class="spinner"></div>
+  <h2>Making your print...</h2>
+</section>
+
+<section id="done" class="screen">
+  <img id="final" alt="Your print">
+  <div class="done-text">
+    <h2 id="done-title">Printing now!</h2>
+    <p id="done-msg">Grab your photo from the printer. Scan the QR code on it to download the picture or share it to your Instagram story.</p>
+    <button id="finish" class="primary">Done</button>
+  </div>
+</section>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

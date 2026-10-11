@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Photobooth share page and upload API
+
+Parameters:
+  BoothKey:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    Description: Shared secret the Pi sends when uploading photos
+  EventName:
+    Type: String
+    Default: Photobooth
+    Description: Title shown on the share page
+
+Resources:
+  PhotoBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [GET, HEAD]
+            AllowedOrigins: ["*"]
+            AllowedHeaders: ["*"]
+            MaxAge: 3600
+
+  ShareFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: share/
+      Handler: app.handler
+      Runtime: python3.12
+      MemorySize: 256
+      Timeout: 10
+      Environment:
+        Variables:
+          BUCKET: !Ref PhotoBucket
+          BOOTH_KEY: !Ref BoothKey
+          EVENT_NAME: !Ref EventName
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref PhotoBucket
+      Events:
+        Upload:
+          Type: HttpApi
+          Properties:
+            Path: /upload
+            Method: POST
+        Page:
+          Type: HttpApi
+          Properties:
+            Path: /p/{id}
+            Method: GET
+
+Outputs:
+  ApiUrl:
+    Description: Use this for share_base_url and upload_api_url on the Pi
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  BucketName:
+    Value: !Ref PhotoBucket

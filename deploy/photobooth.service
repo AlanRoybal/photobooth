@@ -1,0 +1,14 @@
+[Unit]
+Description=Photobooth server
+After=network.target
+
+[Service]
+User=__USER__
+WorkingDirectory=__REPO__/booth
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 __REPO__/booth/app.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

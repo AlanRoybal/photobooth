@@ -1,0 +1,7 @@
+{
+  "title": "Photobooth",
+  "share_base_url": "https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com",
+  "upload_api_url": "https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com",
+  "booth_key": "SAME_VALUE_AS_THE_BoothKey_PARAMETER",
+  "printer_name": "SELPHY"
+}

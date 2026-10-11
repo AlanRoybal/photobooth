@@ -1,0 +1,5 @@
+__pycache__/
+booth/config.local.json
+cloud/.aws-sam/
+cloud/samconfig.toml
+frames-src/previews/
