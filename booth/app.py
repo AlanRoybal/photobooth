@@ -118,7 +118,7 @@ def confirm():
     framed.save(out / "framed.jpg", "JPEG", quality=92)
     compose.story(photo, framed, frame).save(out / "story.jpg", "JPEG", quality=92)
     printed = compose.with_qr(framed, frame, share_url(print_id))
-    compose.for_print(printed, cfg["print_scale"]).save(out / "print.jpg", "JPEG", quality=95)
+    compose.for_print(printed, cfg["print_scale"], cfg["print_gamma"]).save(out / "print.jpg", "JPEG", quality=95)
     clear_captures()
 
     error = None

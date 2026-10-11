@@ -53,7 +53,9 @@ def with_qr(img, frame: Frame, url):
     return out
 
 
-def for_print(img, scale):
+def for_print(img, scale, gamma=1.0):
+    if gamma != 1.0:
+        img = img.point([round(255 * (i / 255) ** (1 / gamma)) for i in range(256)] * 3)
     if scale >= 1:
         return img
     page = Image.new("RGB", PRINT_SIZE, "white")
