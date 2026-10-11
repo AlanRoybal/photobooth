@@ -119,6 +119,8 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 <button id="share" class="btn ig" disabled>Share to Instagram Story</button>
 <a class="btn dl" href="{download}">Download photo</a>
 <p id="hint" hidden>Your browser can't share files directly. Download the photo, then in Instagram tap + and choose Story.</p>
+<p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
+<p id="tagline" hidden>Share to your story and tag us! <b id="handle"></b></p>
 <script>
   const shareBtn = document.getElementById("share");
   let file = null;
@@ -139,23 +141,12 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
     document.getElementById("hint").hidden = false;
   }
   const handle = {handle};
-  const tagBtn = document.getElementById("tag");
   if (handle) {
-    document.getElementById("tagline").hidden = false;
     document.getElementById("handle").textContent = handle;
-    tagBtn.textContent = "Copy " + handle;
-    tagBtn.hidden = false;
+    document.getElementById("tagline").hidden = false;
   }
-  function copyHandle() {
-    if (handle && navigator.clipboard) navigator.clipboard.writeText(handle).catch(() => {});
-  }
-  tagBtn.addEventListener("click", () => { copyHandle(); tagBtn.textContent = "Copied " + handle; });
   shareBtn.addEventListener("click", () => {
-    copyHandle();
     navigator.share({ files: [file] }).catch(() => {});
   });
 </script>
-<p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
-<p id="tagline" hidden>To tag <b id="handle"></b>, tap the Aa text tool in your story and paste. We copy it for you when you tap Share.</p>
-<button id="tag" class="btn dl" hidden></button>
 </body></html>"""

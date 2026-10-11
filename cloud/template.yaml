@@ -15,7 +15,7 @@ Parameters:
   InstagramHandle:
     Type: String
     Default: ""
-    Description: Instagram account (without @) the share page copies so guests can tag it in their story
+    Description: Instagram account (without @) the share page asks guests to tag in their story
 
 Resources:
   PhotoBucket:
