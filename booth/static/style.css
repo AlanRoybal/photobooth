@@ -59,9 +59,12 @@ body.show-live #guide { visibility: visible; }
 .opt { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 14px; width: 156px; height: 156px;
   padding-bottom: 18px; border-radius: 28px; background: var(--fill, #121019); color: var(--label, var(--soft));
   box-shadow: inset 0 0 0 4px rgba(124, 52, 216, var(--k, 0)); font-size: 20px; font-weight: 600; }
-.opt i { display: block; border-radius: 6px; background: var(--icon, #5A5470); }
-.opt i.tall { width: 52px; height: 78px; }
-.opt i.wide { width: 78px; height: 52px; }
+.opt i { position: relative; display: block; overflow: hidden; border-radius: 9px; background: var(--icon, #5A5470); }
+.opt i::before, .opt i::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); background: #fff; }
+.opt i::before { top: calc(var(--ih) * 0.44 - 7.8px); width: 15.6px; height: 15.6px; border-radius: 50%; }
+.opt i::after { bottom: 0; width: 31.2px; height: calc(var(--ih) * 0.225); border-radius: 50% 50% 0 0 / 100% 100% 0 0; }
+.opt i.tall { --ih: 78px; width: 52px; height: 78px; }
+.opt i.wide { --ih: 52px; width: 78px; height: 52px; }
 
 #countdown { background: transparent; }
 #chip { padding: 8px 16px; border-radius: 999px; background: rgba(0, 0, 0, 0.35); font-size: 18px; font-weight: 600; white-space: nowrap; }

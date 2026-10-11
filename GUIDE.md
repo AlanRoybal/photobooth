@@ -89,7 +89,7 @@ Set up my Raspberry Pi 5 photobooth over SSH. The Pi is at booth@photobooth.loca
 
 Hardware: Pi 5 8GB on Raspberry Pi OS 64-bit desktop, Arducam Camera Module 3 (IMX708, 102° wide) on CAM/DISP 0, Hosyond 7" 1024x600 HDMI touchscreen on HDMI 0 with USB touch, SELPHY CP1500 on Wi-Fi.
 
-AWS values from the deploy: ApiUrl = <API URL>, booth key = <BOOTH KEY>. Event title for the start screen: "<EVENT NAME>".
+AWS values from the deploy: ApiUrl = <API URL>, booth key = <BOOTH KEY>. Event title for config.local.json: "<EVENT NAME>".
 
 Steps:
 1. Set up SSH key login so I only type the password once (ssh-copy-id).
