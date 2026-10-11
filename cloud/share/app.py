@@ -136,20 +136,32 @@ def handler(event, context):
 
 STYLE = """
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B0910">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=Orbitron:wght@700;800&display=swap">
 <style>
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { margin: 0; min-height: 100vh; background: #0b0b1a; color: #fff; text-align: center;
-    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; padding: 24px 18px 40px; }
-  h1 { font-size: 24px; margin: 4px 0 18px; }
-  img { width: 100%; max-width: 420px; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.5); }
-  .btn { display: block; width: 100%; max-width: 420px; margin: 14px auto 0; padding: 16px; border: 0; border-radius: 14px;
-    font-size: 18px; font-weight: 700; color: #fff; text-decoration: none; font-family: inherit; }
-  .ig { background: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7); }
-  .dl { background: rgba(255,255,255,.16); }
-  .gal { background: transparent; border: 2px solid rgba(255,255,255,.35); }
-  .ig:disabled { opacity: .6; }
-  p { opacity: .85; line-height: 1.45; max-width: 420px; margin: 14px auto 0; }
+  body { margin: 0; min-height: 100vh; color: #F4F2FF; text-align: center; padding: 28px 18px 44px;
+    font-family: "Chakra Petch", system-ui, sans-serif; background-color: #0B0910;
+    background-image: linear-gradient(rgba(124,52,216,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(124,52,216,.1) 1px, transparent 1px),
+      linear-gradient(180deg, #2A0E52 0%, #160A2C 320px, #0B0910 640px);
+    background-size: 40px 40px, 40px 40px, 100% 100%; background-repeat: repeat, repeat, no-repeat; }
+  h1 { font-family: "Orbitron", sans-serif; font-weight: 700; font-size: 24px; letter-spacing: .02em; margin: 4px 0 20px; }
+  img { width: 100%; max-width: 420px; border-radius: 16px;
+    box-shadow: 0 0 36px rgba(124,52,216,.4), 0 0 0 1.5px rgba(155,92,255,.45); }
+  .btn { display: block; width: 100%; max-width: 420px; margin: 14px auto 0; padding: 17px; border: 0; border-radius: 999px;
+    font-size: 18px; font-weight: 600; color: #F4F2FF; text-decoration: none; font-family: inherit;
+    transition: transform .12s ease-out, opacity .2s; -webkit-tap-highlight-color: transparent; }
+  .btn:active { transform: scale(.96); }
+  .ig { background: linear-gradient(90deg, #7828FF, #B02CE8);
+    box-shadow: 0 0 26px rgba(155,60,255,.55), inset 0 0 0 1.5px rgba(217,184,255,.55); }
+  .dl { background: #1C1826; color: #DBC4FF; }
+  .gal { background: transparent; color: #DBC4FF; box-shadow: inset 0 0 0 1.5px rgba(155,92,255,.45); }
+  .ig:disabled { opacity: .4; box-shadow: none; }
+  p { color: #948EB4; line-height: 1.45; max-width: 420px; margin: 16px auto 0; }
+  #tagline { color: #DBC4FF; }
+  #tagline b { color: #FF2EE6; }
 </style>
 """
 
@@ -198,9 +210,13 @@ GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
 <style>
   body { padding: 24px 12px 40px; }
   h1 { font-size: 26px; }
-  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
     max-width: 1100px; margin: 0 auto; }
-  #grid a { display: block; aspect-ratio: 2 / 3; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,.06); }
+  @media (min-width: 820px) { #grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; } }
+  #grid a { display: block; aspect-ratio: 2 / 3; border-radius: 16px; overflow: hidden; background: #121019;
+    box-shadow: inset 0 0 0 1.5px rgba(155,92,255,.25); transition: transform .15s ease-out, box-shadow .15s; }
+  #grid a:hover { transform: translateY(-3px); box-shadow: 0 0 24px rgba(124,52,216,.45), inset 0 0 0 1.5px rgba(155,92,255,.6); }
+  #grid a:active { transform: scale(.97); }
   #grid img { width: 100%; height: 100%; max-width: none; object-fit: contain; border-radius: 0; box-shadow: none; }
   #status { margin-top: 24px; }
 </style></head><body>

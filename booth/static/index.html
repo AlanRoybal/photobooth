@@ -10,75 +10,91 @@
 <img id="live" alt="">
 <div id="guide"></div>
 
-<section id="start" class="screen active">
-  <h1 id="title">Photobooth</h1>
-  <p class="pulse">Tap anywhere to start</p>
-</section>
+<div id="stage">
+  <section id="start" class="screen">
+    <div id="home-art" class="art"></div>
+    <div id="panel" class="a" style="--x:512px;--y:200px">
+      <h1>Strike a pose!</h1>
+      <p>Free printed photo, plus a link to share it.</p>
+      <div id="steps">
+        <span class="step"><b>1</b>Pick a layout</span>
+        <span class="step"><b>2</b>Strike a pose</span>
+        <span class="step"><b>3</b>Pick a frame</span>
+        <span class="step"><b>4</b>Grab your print</span>
+      </div>
+    </div>
+    <div id="badge" class="badge"></div>
+    <button id="go" class="pill primary a" style="--x:512px;--y:536px">Tap to start</button>
+  </section>
 
-<section id="instructions" class="screen">
-  <div id="arrow" class="arrow">&#8593;</div>
-  <h2>Look up here at the camera</h2>
-  <ol>
-    <li>Get everyone in the shot</li>
-    <li>Tap Ready, then pose during the countdown</li>
-  </ol>
-  <div id="orient" class="orient">
-    <button data-o="portrait"><span class="shape tall"></span>Portrait</button>
-    <button data-o="landscape"><span class="shape wide"></span>Landscape</button>
-  </div>
-  <div class="actions">
-    <button class="secondary big cancel">Cancel</button>
-    <button id="ready" class="primary big">Ready</button>
-  </div>
-</section>
+  <section id="instructions" class="screen bg">
+    <div class="art">
+      <img id="arrow" class="a" src="/static/img/arrow.svg" alt="" style="--y:52px">
+      <div id="orient">
+        <button class="opt a" data-o="portrait" style="--x:422px;--y:330px"><i class="tall"></i>Portrait</button>
+        <button class="opt a" data-o="landscape" style="--x:602px;--y:330px"><i class="wide"></i>Landscape</button>
+      </div>
+    </div>
+    <div class="cap a" style="--y:136px"><h2>Look up here at the camera</h2><p>Pick a layout, tap Ready, then pose during the countdown.</p></div>
+    <button id="ready" class="pill primary a" style="--x:512px;--y:528px">Ready</button>
+  </section>
 
-<section id="countdown" class="screen">
-  <div id="count"></div>
+  <section id="countdown" class="screen">
+    <div id="chip" class="a" style="--x:512px;--y:34px">&#8593; Look here</div>
+    <div id="ring" class="a" style="--x:512px;--y:300px"></div>
+    <div id="count-old" class="num a" style="--x:512px;--y:300px"></div>
+    <div id="count" class="num a" style="--x:512px;--y:300px"></div>
+  </section>
+
+  <section id="review" class="screen bg">
+    <div class="art"><div id="shot-wrap" class="a" style="--x:512px;--y:326px"><img id="shot" alt="Your photo"></div></div>
+    <div class="cap a" style="--y:92px"><h2>Looking good?</h2><p>Retake as many times as you like.</p></div>
+    <button id="retake" class="pill secondary a" style="--x:380px;--y:528px">&#10227; Retake</button>
+    <button id="next" class="pill primary a" style="--x:650px;--y:528px">Next</button>
+  </section>
+
+  <section id="frames" class="screen bg">
+    <div class="art"><div id="track"></div></div>
+    <button id="prev-frame" class="circle a" style="--y:326px">&#8592;</button>
+    <button id="next-frame" class="circle a" style="--y:326px">&#8594;</button>
+    <div class="cap a" style="--y:92px"><h2>Pick a frame</h2><p>Tap the arrows to see them all.</p></div>
+    <button id="frames-back" class="pill secondary a" style="--x:380px;--y:528px">&#8592; Back</button>
+    <button id="confirm" class="pill primary a" style="--x:650px;--y:528px">Confirm</button>
+  </section>
+
+  <section id="printing" class="screen bg">
+    <div class="art">
+      <div id="slot"><img id="paper" class="a" alt=""></div>
+      <img id="printer" class="a" src="/static/img/printer.svg" alt="" style="--x:512px;--y:420px">
+    </div>
+    <div class="cap a" style="--y:92px"><h2>Printing your photo</h2><p>It slides out of the printer in about a minute.</p></div>
+    <div id="pdots"><i class="a" style="--x:492px"></i><i class="a" style="--x:512px"></i><i class="a" style="--x:532px"></i></div>
+  </section>
+
+  <section id="done" class="screen bg">
+    <div class="art">
+      <div id="final-wrap" class="a" style="--x:512px;--y:326px"><img id="final" alt="Your print"><img id="check" class="a" src="/static/img/check.svg" alt=""></div>
+    </div>
+    <div class="cap a" style="--y:92px"><h2 id="done-title">Grab your print!</h2><p id="done-msg"></p></div>
+    <button id="finish" class="pill primary a" style="--x:512px;--y:528px">Done</button>
+  </section>
+
+  <div id="chrome">
+    <div id="progress" class="a" style="--x:117px;--y:40px"><i></i><i></i><i></i><i></i></div>
+    <button class="cancel a" style="--y:40px">&#10005; Cancel</button>
+  </div>
+
   <div id="flash"></div>
-</section>
 
-<section id="review" class="screen">
-  <div id="shot-wrap"><img id="shot" alt="Your photo"></div>
-  <div class="actions">
-    <button class="secondary cancel">Cancel</button>
-    <button id="retake" class="secondary">Retake</button>
-    <button id="next" class="primary">Next</button>
+  <div id="idle-warn" hidden>
+    <h2 class="a" style="--x:512px;--y:180px">Still there?</h2>
+    <div id="idle-ring" class="a" style="--x:512px;--y:320px">
+      <svg viewBox="0 0 132 132"><circle cx="66" cy="66" r="58" fill="none" stroke="#2A2440" stroke-width="10"/><circle id="idle-arc" cx="66" cy="66" r="58" fill="none" stroke="#FF2EE6" stroke-width="10" stroke-linecap="round" transform="rotate(-90 66 66)" stroke-dasharray="364.4" stroke-dashoffset="0"/></svg>
+      <span id="idle-num"></span>
+    </div>
+    <p class="big a" style="--x:512px;--y:430px">Going back to the start in <span id="idle-left"></span> seconds.</p>
+    <p class="a" style="--x:512px;--y:474px">Tap anywhere to keep going.</p>
   </div>
-</section>
-
-<section id="frames" class="screen">
-  <h2>Pick a frame</h2>
-  <div class="carousel">
-    <button id="prev-frame" class="nav">&#8249;</button>
-    <div id="track-window"><div id="track"></div></div>
-    <button id="next-frame" class="nav">&#8250;</button>
-  </div>
-  <div id="dots"></div>
-  <div class="actions">
-    <button class="secondary cancel">Cancel</button>
-    <button id="frames-back" class="secondary">Back</button>
-    <button id="confirm" class="primary">Confirm</button>
-  </div>
-</section>
-
-<section id="printing" class="screen">
-  <div class="spinner"></div>
-  <h2>Making your print...</h2>
-</section>
-
-<section id="done" class="screen">
-  <img id="final" alt="Your print">
-  <div class="done-text">
-    <h2 id="done-title">Printing now!</h2>
-    <p id="done-msg">Grab your photo from the printer. Scan the QR code on it to download the picture or share it to your Instagram story.</p>
-    <button id="finish" class="primary">Done</button>
-  </div>
-</section>
-
-<div id="idle-warn" hidden>
-  <h2>Still there?</h2>
-  <p>Going back to the start in <span id="idle-left"></span> seconds.</p>
-  <p>Tap anywhere to keep going.</p>
 </div>
 
 <script src="/static/app.js"></script>
