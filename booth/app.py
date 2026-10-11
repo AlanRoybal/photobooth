@@ -70,7 +70,8 @@ def index():
 def ui_config():
     keys = ("title", "countdown_seconds", "idle_timeout_seconds", "done_screen_seconds",
             "camera_arrow_x_percent", "mirror_preview")
-    return jsonify({k: cfg[k] for k in keys})
+    home = config.ROOT / "static" / "home.png"
+    return jsonify({**{k: cfg[k] for k in keys}, "home_image": home.exists()})
 
 
 @app.get("/stream.mjpg")

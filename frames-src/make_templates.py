@@ -103,8 +103,43 @@ def guide(orientation, layout):
     return img
 
 
-def letter_page(orientation, art):
+HOME = (1024, 600)
+HOME_SCALE = 2
+HOME_SAFE = 30
+
+
+def home_blank():
+    w, h = HOME[0] * HOME_SCALE, HOME[1] * HOME_SCALE
+    img = Image.new("RGB", (w, h), "white")
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, w - 1, h - 1], outline=BLUE, width=4)
+    s = HOME_SAFE * HOME_SCALE
+    dashed_rect(d, (s, s, w - 1 - s, h - 1 - s), BLUE, width=3)
+    return img
+
+
+def home_guide():
+    img = home_blank()
+    d = ImageDraw.Draw(img)
+    w = img.width
+    lines = [
+        ("HOME SCREEN (touchscreen start screen)", 64, True),
+        (f"Screen: {HOME[0]} x {HOME[1]} px. This template: {img.width} x {img.height} px (2x, scaled down for you).", 34, False),
+        ("The whole screen is the start button: guests tap anywhere.", 34, False),
+        ("Put your event name and a 'tap to start' line in the art.", 34, False),
+        (f"Keep text and logos inside the dashed line ({HOME_SAFE} px on screen).", 34, False),
+        ("Fill the art to the outer edge. The camera sits just above the top-center edge.", 34, False),
+    ]
+    y = 380
+    for text, size, bold in lines:
+        d.text((w // 2, y), text, font=font(size, bold), fill=(40, 40, 40), anchor="mm")
+        y += size + 40
+    return img
+
+
+def letter_page(orientation, art, label=None):
     """Enlarged copy on US Letter for drawing on paper, with registration marks outside the frame."""
+    label = label or f"{orientation.capitalize()} frame"
     page_size = (2550, 3300) if orientation == "portrait" else (3300, 2550)
     page = Image.new("RGB", page_size, "white")
     margin_x, margin_top, margin_bottom = 150, 330, 200
@@ -118,8 +153,8 @@ def letter_page(orientation, art):
         d.line([(mx + 20, my), (mx + 60, my)], fill="black", width=3)
         d.line([(mx, my - 60), (mx, my - 20)], fill="black", width=3)
         d.line([(mx, my + 20), (mx, my + 60)], fill="black", width=3)
-    d.text((page_size[0] // 2, 110), f"{orientation.capitalize()} frame, drawn at {scale:.0%} "
-           f"({big.width / DPI:.1f} x {big.height / DPI:.1f} in)", font=font(54, True), fill="black", anchor="mm")
+    d.text((page_size[0] // 2, 110), f"{label}, drawn at {big.width / DPI:.1f} x {big.height / DPI:.1f} in",
+           font=font(54, True), fill="black", anchor="mm")
     d.text((page_size[0] // 2, 185), "Draw over the light-blue lines (they scan out). Fill art to the outer border. "
            "Scan the whole page at 600 DPI.", font=font(36), fill=(70, 70, 70), anchor="mm")
     return page
@@ -135,5 +170,10 @@ if __name__ == "__main__":
         o.save(OUT / f"{orientation}-guides-overlay.png", dpi=(DPI, DPI))
         letter_page(orientation, b).save(OUT / f"{orientation}-letter-for-drawing.png", dpi=(DPI, DPI))
         pdf_pages += [g, b, letter_page(orientation, b)]
+    hg, hb = home_guide(), home_blank()
+    hg.save(OUT / "home-guide.png", dpi=(DPI, DPI))
+    hb.save(OUT / "home-blank.png", dpi=(DPI, DPI))
+    letter_page("landscape", hb, "Home screen").save(OUT / "home-letter-for-drawing.png", dpi=(DPI, DPI))
+    pdf_pages += [hg, letter_page("landscape", hb, "Home screen")]
     pdf_pages[0].save(OUT / "templates-print.pdf", save_all=True, append_images=pdf_pages[1:], resolution=DPI)
     print("wrote", sorted(p.name for p in OUT.iterdir()))

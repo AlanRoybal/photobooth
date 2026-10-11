@@ -170,6 +170,7 @@ async function init() {
   document.querySelectorAll("#orient button").forEach((b) =>
     b.addEventListener("click", () => { setOrientation(b.dataset.o); resetIdle(); }));
   $("title").textContent = state.cfg.title;
+  $("start").classList.toggle("custom", state.cfg.home_image);
   $("arrow").style.left = `${state.cfg.camera_arrow_x_percent}%`;
   live.classList.toggle("mirror", state.cfg.mirror_preview);
   live.src = "/stream.mjpg";

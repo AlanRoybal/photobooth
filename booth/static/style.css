@@ -27,6 +27,8 @@ body.show-live #guide { visibility: visible; }
 #start { background: radial-gradient(circle at 50% 40%, #2b2f6b, #0b0b1a); }
 #start h1 { font-size: 72px; letter-spacing: 1px; }
 #start p { font-size: 30px; opacity: 0.85; }
+#start.custom { background: #000 url("/static/home.png") center / cover no-repeat; }
+#start.custom > * { display: none; }
 .pulse { animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.35; } }
 
