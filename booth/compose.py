@@ -41,11 +41,21 @@ def _place_photo(canvas_size, frame_png, photo, rect):
     return Image.alpha_composite(canvas, overlay).convert("RGB")
 
 
-def qr_image(url, size):
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2, box_size=10)
+def qr_image(url, size, color="#000000", logo=None):
+    """QR code in `color`; with a logo, error correction goes up to H so the covered center still scans."""
+    level = qrcode.constants.ERROR_CORRECT_H if logo else qrcode.constants.ERROR_CORRECT_M
+    qr = qrcode.QRCode(error_correction=level, border=2, box_size=10)
     qr.add_data(url)
     qr.make(fit=True)
-    return qr.make_image(fill_color="black", back_color="white").convert("RGB").resize((size, size), Image.NEAREST)
+    img = qr.make_image(fill_color=color, back_color="white").convert("RGB").resize((size, size), Image.NEAREST)
+    if logo:
+        mark = Image.open(logo).convert("RGBA")
+        mark = ImageOps.contain(mark.crop(mark.getbbox()), (round(size * 0.22),) * 2, Image.LANCZOS)
+        pad = round(size * 0.27)
+        box = ((size - pad) // 2, (size - pad) // 2)
+        img.paste(Image.new("RGB", (pad, pad), "white"), box)
+        img.paste(mark, ((size - mark.width) // 2, (size - mark.height) // 2), mark)
+    return img
 
 
 def framed(photo, frame: Frame):
@@ -57,9 +67,9 @@ def framed(photo, frame: Frame):
     return img
 
 
-def with_qr(img, frame: Frame, url):
+def with_qr(img, frame: Frame, url, color="#000000", logo=None):
     out = img.copy()
-    out.paste(qr_image(url, frame.qr["size"]), (frame.qr["x"], frame.qr["y"]))
+    out.paste(qr_image(url, frame.qr["size"], color, logo), (frame.qr["x"], frame.qr["y"]))
     return out
 
 

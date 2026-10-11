@@ -42,6 +42,16 @@ def share_url(print_id):
     return f"{cfg['share_base_url'].rstrip('/')}/{print_id}"
 
 
+QR_LOGO = FRAMES_DIR / "qr-logo.png"
+
+
+def add_qr(img, frame, print_id):
+    # Uppercase lets the QR use compact alphanumeric mode (the share page accepts any case), so the
+    # extra error correction needed for the center logo doesn't make the code denser.
+    return compose.with_qr(img, frame, share_url(print_id).upper(), cfg["qr_color"],
+                           QR_LOGO if QR_LOGO.exists() else None)
+
+
 def load_capture(capture_id):
     path = CAPTURES / f"{capture_id}.jpg"
     if not capture_id.isalnum() or not path.exists():
@@ -103,7 +113,7 @@ def list_frames():
 @app.get("/api/preview/<capture_id>/<frame_id>.jpg")
 def preview(capture_id, frame_id):
     frame = get_frame(frame_id)
-    img = compose.with_qr(compose.framed(load_capture(capture_id), frame), frame, share_url("preview"))
+    img = add_qr(compose.framed(load_capture(capture_id), frame), frame, "preview")
     return jpeg_response(img.resize((img.width // 2, img.height // 2), compose.Image.LANCZOS))
 
 
@@ -121,7 +131,7 @@ def confirm():
     framed.resize((framed.width * 2 // 5, framed.height * 2 // 5), compose.Image.LANCZOS).save(
         out / "thumb.jpg", "JPEG", quality=80)
     compose.story(photo, framed, frame).save(out / "story.jpg", "JPEG", quality=92)
-    printed = compose.with_qr(framed, frame, share_url(print_id))
+    printed = add_qr(framed, frame, print_id)
     compose.for_print(printed, cfg["print_scale"], cfg["print_gamma"]).save(out / "print.jpg", "JPEG", quality=95)
     clear_captures()
 

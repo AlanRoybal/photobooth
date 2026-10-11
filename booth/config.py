@@ -20,6 +20,7 @@ DEFAULTS = {
     "print_options": ["-o", "PageSize=Postcard.Borderless"],
     "print_scale": 0.96,
     "print_gamma": 1.0,
+    "qr_color": "#000000",
     "share_base_url": "",
     "upload_api_url": "",
     "booth_key": "",

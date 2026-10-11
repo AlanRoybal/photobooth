@@ -119,7 +119,7 @@ def gallery_photos(query):
 
 def handler(event, context):
     route = event.get("routeKey", "")
-    params = event.get("pathParameters") or {}
+    params = {k: v.lower() if k == "id" else v for k, v in (event.get("pathParameters") or {}).items()}
     query = event.get("queryStringParameters") or {}
     if route == "POST /upload":
         return upload(event)
