@@ -13,7 +13,8 @@ STILL_SIZE = (2304, 1296)
 class Camera:
     """Live JPEG preview frames plus full-resolution stills from one camera."""
 
-    def __init__(self, rotate_180=False):
+    def __init__(self, rotate_180=False, ev=0.0):
+        self.controls = {"ExposureValue": float(ev), "FrameDurationLimits": (33333, 50000)}
         self.lock = threading.Lock()
         self.cond = threading.Condition()
         self.frame = None
@@ -50,6 +51,7 @@ class Camera:
             )
             picam2.configure(config)
         picam2.start()
+        picam2.set_controls(self.controls)
         try:
             picam2.set_controls({"AfMode": 2})
         except Exception:

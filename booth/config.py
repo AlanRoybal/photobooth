@@ -12,6 +12,7 @@ DEFAULTS = {
     "done_screen_seconds": 30,
     "camera_arrow_x_percent": 50,
     "camera_rotate_180": False,
+    "camera_ev": 0.0,
     "mirror_preview": True,
     "mirror_photo": True,
     "printer_name": "SELPHY",

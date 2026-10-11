@@ -28,7 +28,7 @@ clear_captures()
 
 ID_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
 app = Flask(__name__, static_folder="static", static_url_path="/static")
-camera = Camera(rotate_180=cfg["camera_rotate_180"])
+camera = Camera(rotate_180=cfg["camera_rotate_180"], ev=cfg["camera_ev"])
 uploader = Uploader(PRINTS, cfg["upload_api_url"], cfg["booth_key"])
 frames = {f.id: f for f in compose.load_frames(FRAMES_DIR)}
 capture_lock = threading.Lock()
