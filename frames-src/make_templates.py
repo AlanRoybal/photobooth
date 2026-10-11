@@ -1,4 +1,4 @@
-"""Blank design templates for hand-drawn frames: python3 frames-src/make_templates.py (needs Pillow + DejaVu fonts)."""
+"""Blank design templates for the hand-drawn frames and home screen: python3 frames-src/make_templates.py (needs Pillow + DejaVu fonts)."""
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -106,34 +106,62 @@ def guide(orientation, layout):
 HOME = (1024, 600)
 HOME_SCALE = 2
 HOME_SAFE = 30
+HOME_SIZE = (HOME[0] * HOME_SCALE, HOME[1] * HOME_SCALE)
+# Parts of the start screen the booth app draws over the home art, in screen px (includes their idle motion).
+HOME_UI = [
+    ("EVENT NAME", (28, 21, 213, 59), 19),
+    ("INSTRUCTIONS PANEL", (122, 84, 902, 316), 32),
+    ("TAP TO START", (370, 496, 654, 576), 40),
+]
+
+
+def home_outlines(base, color, fill=None):
+    s = HOME_SCALE
+    w, h = HOME_SIZE
+    d = ImageDraw.Draw(base, "RGBA")
+    d.rectangle([0, 0, w - 1, h - 1], outline=color, width=4)
+    dashed_rect(d, (HOME_SAFE * s, HOME_SAFE * s, w - 1 - HOME_SAFE * s, h - 1 - HOME_SAFE * s), color, width=3)
+    for _, box, radius in HOME_UI:
+        d.rounded_rectangle([v * s for v in box], radius * s, outline=color, width=4, fill=fill)
+    return d
 
 
 def home_blank():
-    w, h = HOME[0] * HOME_SCALE, HOME[1] * HOME_SCALE
-    img = Image.new("RGB", (w, h), "white")
-    d = ImageDraw.Draw(img)
-    d.rectangle([0, 0, w - 1, h - 1], outline=BLUE, width=4)
-    s = HOME_SAFE * HOME_SCALE
-    dashed_rect(d, (s, s, w - 1 - s, h - 1 - s), BLUE, width=3)
+    img = Image.new("RGB", HOME_SIZE, "white")
+    home_outlines(img, BLUE)
+    return img
+
+
+def home_overlay():
+    img = Image.new("RGBA", HOME_SIZE, (0, 0, 0, 0))
+    home_outlines(img, BLUE + (255,))
     return img
 
 
 def home_guide():
-    img = home_blank()
-    d = ImageDraw.Draw(img)
-    w = img.width
+    img = Image.new("RGB", HOME_SIZE, "white")
+    d = home_outlines(img, (90, 60, 140), fill=(36, 31, 56, 255))
+    s, w = HOME_SCALE, HOME_SIZE[0]
+    for label, box, _ in HOME_UI:
+        cx, cy = (box[0] + box[2]) * s // 2, (box[1] + box[3]) * s // 2
+        d.text((cx, cy), label, font=font(28 if label == "EVENT NAME" else 44, True), fill=(219, 196, 255), anchor="mm")
+    d.text((box_right := HOME_UI[0][1][2] * s + 30, HOME_UI[0][1][1] * s + 38), "drawn by the app (shows your event name)",
+           font=font(30), fill=(90, 60, 140), anchor="lm")
+    d.text((w // 2, HOME_UI[1][1][1] * s + 330), "drawn by the app (title and the 4 steps)",
+           font=font(32), fill=(148, 142, 180), anchor="mm")
     lines = [
-        ("HOME SCREEN (touchscreen start screen)", 64, True),
-        (f"Screen: {HOME[0]} x {HOME[1]} px. This template: {img.width} x {img.height} px (2x, scaled down for you).", 34, False),
-        ("The whole screen is the start button: guests tap anywhere.", 34, False),
-        ("Put your event name and a 'tap to start' line in the art.", 34, False),
-        (f"Keep text and logos inside the dashed line ({HOME_SAFE} px on screen).", 34, False),
-        ("Fill the art to the outer edge. The camera sits just above the top-center edge.", 34, False),
+        (f"HOME SCREEN  {HOME[0]} x {HOME[1]} px. This template is {w} x {HOME_SIZE[1]} px (2x).", 34, True),
+        ("Save your art as home.png at either size.", 30, False),
+        ("Dark boxes: the app draws these on top of your art. Don't draw an event name, instructions or a start button.", 30, False),
+        ("The panel is see-through, so art behind it only shows faintly. Keep that area simple.", 30, False),
+        ("Guests tap anywhere to start. The art fills the whole screen, so draw to the outer edge.", 30, False),
+        (f"Dashed line ({HOME_SAFE} px in): keep faces and logos inside it.", 30, False),
+        ("The panel and button are dark purple with a neon glow, so a dark background keeps them readable.", 30, False),
     ]
-    y = 380
+    y = HOME_UI[1][1][3] * s + 50
     for text, size, bold in lines:
         d.text((w // 2, y), text, font=font(size, bold), fill=(40, 40, 40), anchor="mm")
-        y += size + 40
+        y += size + 16
     return img
 
 
@@ -173,6 +201,7 @@ if __name__ == "__main__":
     hg, hb = home_guide(), home_blank()
     hg.save(OUT / "home-guide.png", dpi=(DPI, DPI))
     hb.save(OUT / "home-blank.png", dpi=(DPI, DPI))
+    home_overlay().save(OUT / "home-guides-overlay.png", dpi=(DPI, DPI))
     letter_page("landscape", hb, "Home screen").save(OUT / "home-letter-for-drawing.png", dpi=(DPI, DPI))
     pdf_pages += [hg, letter_page("landscape", hb, "Home screen")]
     pdf_pages[0].save(OUT / "templates-print.pdf", save_all=True, append_images=pdf_pages[1:], resolution=DPI)
