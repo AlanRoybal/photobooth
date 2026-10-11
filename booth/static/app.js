@@ -136,6 +136,7 @@ async function init() {
   $("frames-back").addEventListener("click", () => show("review"));
   $("confirm").addEventListener("click", confirmPrint);
   $("finish").addEventListener("click", () => show("start"));
+  document.querySelectorAll(".cancel").forEach((b) => b.addEventListener("click", () => show("start")));
   document.addEventListener("pointerdown", resetIdle);
   document.addEventListener("contextmenu", (e) => e.preventDefault());
 }

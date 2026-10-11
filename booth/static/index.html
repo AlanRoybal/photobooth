@@ -21,7 +21,10 @@
     <li>Get everyone in the shot</li>
     <li>Tap Ready, then pose during the countdown</li>
   </ol>
-  <button id="ready" class="primary big">Ready</button>
+  <div class="actions">
+    <button class="secondary big cancel">Cancel</button>
+    <button id="ready" class="primary big">Ready</button>
+  </div>
 </section>
 
 <section id="countdown" class="screen">
@@ -32,6 +35,7 @@
 <section id="review" class="screen">
   <img id="shot" alt="Your photo">
   <div class="actions">
+    <button class="secondary cancel">Cancel</button>
     <button id="retake" class="secondary">Retake</button>
     <button id="next" class="primary">Next</button>
   </div>
@@ -46,6 +50,7 @@
   </div>
   <div id="dots"></div>
   <div class="actions">
+    <button class="secondary cancel">Cancel</button>
     <button id="frames-back" class="secondary">Back</button>
     <button id="confirm" class="primary">Confirm</button>
   </div>
