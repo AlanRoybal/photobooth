@@ -66,7 +66,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const STEP = { instructions: 0, review: 1, frames: 2, printing: 3, done: 3 };
 function clearVars(root) {
   [root, ...$$(".a, .step, .art", root)].forEach((el) =>
-    ["--o", "--s", "--dy", "--dx", "--r", "--sy", "--bga", "--t2"].forEach((p) => el.style.removeProperty(p)));
+    ["--o", "--s", "--dy", "--dx", "--r", "--sy", "--bga"].forEach((p) => el.style.removeProperty(p)));
 }
 function screenOn(name, on = true) {
   $(name).classList.toggle("on", on);
@@ -139,8 +139,7 @@ function paintOrient() {
 // A: Start entrance, then B: idle loop.
 function startPaint(t) {
   set($("home-art"), { o: eoc(prog(t, 0, 0.5)) });
-  set($("panel"), { o: prog(t, 0.15, 0.45), s: lerp(0.9, 1, spring(t, 0.15, 0.7, 0.6)),
-    t2: eoc(prog(t, 0.3, 0.75)) });
+  set($("panel"), { o: prog(t, 0.15, 0.45), s: lerp(0.9, 1, spring(t, 0.15, 0.7, 0.6)) });
   $$(".step").forEach((el, i) => {
     const s = 0.6 + 0.08 * i;
     set(el, { o: prog(t, s, s + 0.2), dy: 16 * (1 - spring(t, s, 0.6, 0.6)) });

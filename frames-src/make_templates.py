@@ -108,9 +108,9 @@ HOME_SCALE = 2
 HOME_SAFE = 30
 HOME_SIZE = (HOME[0] * HOME_SCALE, HOME[1] * HOME_SCALE)
 # Parts of the start screen the booth app draws over the home art, in screen px (includes their idle motion).
-HOME_TITLE = (60, 40, 964, 316)
+HOME_TITLE = (60, 40, 964, 370)
 HOME_UI = [
-    ("INSTRUCTIONS PANEL", (122, 332, 902, 468), 32),
+    ("INSTRUCTIONS PANEL", (122, 382, 902, 470), 32),
     ("TAP TO START", (370, 496, 654, 576), 40),
 ]
 
@@ -144,8 +144,8 @@ def home_guide():
     s, w = HOME_SCALE, HOME_SIZE[0]
     for label, box, _ in HOME_UI:
         cx, cy = (box[0] + box[2]) * s // 2, (box[1] + box[3]) * s // 2
-        d.text((cx, cy - (24 if label != "TAP TO START" else 0)), label, font=font(40, True), fill=(219, 196, 255), anchor="mm")
-    d.text((w // 2, (HOME_UI[0][1][1] + HOME_UI[0][1][3]) * s // 2 + 34), "drawn by the app (one-line intro and the 4 steps)",
+        d.text((cx, cy - (20 if label != "TAP TO START" else 0)), label, font=font(40, True), fill=(219, 196, 255), anchor="mm")
+    d.text((w // 2, (HOME_UI[0][1][1] + HOME_UI[0][1][3]) * s // 2 + 30), "drawn by the app (the 4 steps)",
            font=font(30), fill=(148, 142, 180), anchor="mm")
     tx0, ty0, tx1, ty1 = [v * s for v in HOME_TITLE]
     dashed_rect(d, (tx0, ty0, tx1, ty1), (255, 46, 230), width=4)
