@@ -118,7 +118,6 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 <img src="{photo}" alt="Your photobooth picture">
 <button id="share" class="btn ig" disabled>Share to Instagram Story</button>
 <a class="btn dl" href="{download}">Download photo</a>
-<p id="hint" hidden>Your browser can't share files directly. Download the photo, then in Instagram tap + and choose Story.</p>
 <p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
 <p id="tagline" hidden>Share to your story and tag us! <b id="handle"></b></p>
 <script>
@@ -138,7 +137,6 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
   function fallback() {
     shareBtn.hidden = true;
     document.getElementById("howto").hidden = true;
-    document.getElementById("hint").hidden = false;
   }
   const handle = {handle};
   if (handle) {
