@@ -39,7 +39,7 @@ def new_id(n=8):
 
 
 def share_url(print_id):
-    return f"{cfg['share_base_url'].rstrip('/')}/p/{print_id}"
+    return f"{cfg['share_base_url'].rstrip('/')}/{print_id}"
 
 
 def load_capture(capture_id):
@@ -118,6 +118,8 @@ def confirm():
 
     framed = compose.framed(photo, frame)
     framed.save(out / "framed.jpg", "JPEG", quality=92)
+    framed.resize((framed.width * 2 // 5, framed.height * 2 // 5), compose.Image.LANCZOS).save(
+        out / "thumb.jpg", "JPEG", quality=80)
     compose.story(photo, framed, frame).save(out / "story.jpg", "JPEG", quality=92)
     printed = compose.with_qr(framed, frame, share_url(print_id))
     compose.for_print(printed, cfg["print_scale"], cfg["print_gamma"]).save(out / "print.jpg", "JPEG", quality=95)

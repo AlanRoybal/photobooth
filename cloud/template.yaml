@@ -16,6 +16,17 @@ Parameters:
     Type: String
     Default: ""
     Description: Instagram account (without @) the share page asks guests to tag in their story
+  DomainName:
+    Type: String
+    Default: ""
+    Description: Optional custom domain for the share pages and gallery, e.g. photobooth.example.com
+  HostedZoneId:
+    Type: String
+    Default: ""
+    Description: Route 53 hosted zone that DomainName lives in (required with DomainName)
+
+Conditions:
+  HasDomain: !Not [!Equals [!Ref DomainName, ""]]
 
 Resources:
   PhotoBucket:
@@ -59,12 +70,76 @@ Resources:
         Page:
           Type: HttpApi
           Properties:
+            Path: /{id}
+            Method: GET
+        Image:
+          Type: HttpApi
+          Properties:
+            Path: /{id}/{file}
+            Method: GET
+        LegacyPage:
+          Type: HttpApi
+          Properties:
             Path: /p/{id}
             Method: GET
+        Gallery:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: GET
+        GalleryPhotos:
+          Type: HttpApi
+          Properties:
+            Path: /api/photos
+            Method: GET
+
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: HasDomain
+    Properties:
+      DomainName: !Ref DomainName
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+
+  CustomDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Condition: HasDomain
+    Properties:
+      DomainName: !Ref DomainName
+      DomainNameConfigurations:
+        - CertificateArn: !Ref Certificate
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  CustomDomainMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: HasDomain
+    DependsOn: ServerlessHttpApiApiGatewayDefaultStage
+    Properties:
+      DomainName: !Ref CustomDomain
+      ApiId: !Ref ServerlessHttpApi
+      Stage: $default
+
+  CustomDomainRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: HasDomain
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CustomDomain.RegionalDomainName
+        HostedZoneId: !GetAtt CustomDomain.RegionalHostedZoneId
 
 Outputs:
   ApiUrl:
     Description: Use this for share_base_url and upload_api_url on the Pi
     Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  SiteUrl:
+    Condition: HasDomain
+    Description: Share pages (SiteUrl/<id>) and the public gallery (SiteUrl/)
+    Value: !Sub "https://${DomainName}"
   BucketName:
     Value: !Ref PhotoBucket

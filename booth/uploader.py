@@ -5,7 +5,7 @@ from pathlib import Path
 
 import requests
 
-FILES = ("framed.jpg", "story.jpg")
+FILES = ("framed.jpg", "thumb.jpg", "story.jpg")
 
 
 class Uploader:
