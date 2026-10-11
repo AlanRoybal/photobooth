@@ -23,7 +23,7 @@ def make(fid, name, bg, fg, story_bg, order):
     d.rectangle([PHOTO["x"], PHOTO["y"], PHOTO["x"] + PHOTO["w"] - 1, PHOTO["y"] + PHOTO["h"] - 1], fill=(0, 0, 0, 0))
     d.text((90, 1400), "PHOTOBOOTH", font=ImageFont.truetype(FONT, 84), fill=fg)
     d.text((94, 1510), name.upper() + " FRAME", font=ImageFont.truetype(FONT, 44), fill=fg)
-    d.rounded_rectangle([QR["x"], QR["y"], QR["x"] + QR["size"], QR["y"] + QR["size"]], 24, outline=fg, width=6)
+    d.rounded_rectangle([QR["x"], QR["y"], QR["x"] + QR["size"] - 1, QR["y"] + QR["size"] - 1], 24, outline=fg, width=6)
     d.text((QR["x"] + QR["size"] // 2, QR["y"] + QR["size"] // 2), "LOGO", font=ImageFont.truetype(FONT, 56),
            fill=fg, anchor="mm")
     img.save(OUT / f"{fid}.png")
