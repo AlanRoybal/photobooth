@@ -1,0 +1,17 @@
+{
+  "name": "Classic",
+  "order": 0,
+  "orientation": "landscape",
+  "photo": {
+    "x": 60,
+    "y": 60,
+    "w": 1680,
+    "h": 820
+  },
+  "qr": {
+    "x": 1490,
+    "y": 890,
+    "size": 240
+  },
+  "story_bg": "#ffffff"
+}

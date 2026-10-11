@@ -8,6 +8,7 @@
 </head>
 <body>
 <img id="live" alt="">
+<div id="guide"></div>
 
 <section id="start" class="screen active">
   <h1 id="title">Photobooth</h1>
@@ -21,6 +22,10 @@
     <li>Get everyone in the shot</li>
     <li>Tap Ready, then pose during the countdown</li>
   </ol>
+  <div id="orient" class="orient">
+    <button data-o="portrait"><span class="shape tall"></span>Portrait</button>
+    <button data-o="landscape"><span class="shape wide"></span>Landscape</button>
+  </div>
   <button id="ready" class="primary big">Ready</button>
 </section>
 
@@ -30,7 +35,7 @@
 </section>
 
 <section id="review" class="screen">
-  <img id="shot" alt="Your photo">
+  <div id="shot-wrap"><img id="shot" alt="Your photo"></div>
   <div class="actions">
     <button id="retake" class="secondary">Retake</button>
     <button id="next" class="primary">Next</button>

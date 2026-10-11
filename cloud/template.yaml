@@ -12,6 +12,10 @@ Parameters:
     Type: String
     Default: Photobooth
     Description: Title shown on the share page
+  InstagramHandle:
+    Type: String
+    Default: ""
+    Description: Instagram account (without @) the share page copies so guests can tag it in their story
 
 Resources:
   PhotoBucket:
@@ -42,6 +46,7 @@ Resources:
           BUCKET: !Ref PhotoBucket
           BOOTH_KEY: !Ref BoothKey
           EVENT_NAME: !Ref EventName
+          INSTAGRAM_HANDLE: !Ref InstagramHandle
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref PhotoBucket

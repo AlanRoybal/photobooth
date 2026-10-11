@@ -12,6 +12,7 @@ from botocore.exceptions import ClientError
 BUCKET = os.environ["BUCKET"]
 BOOTH_KEY = os.environ["BOOTH_KEY"]
 EVENT_NAME = os.environ.get("EVENT_NAME", "Photobooth")
+INSTAGRAM_HANDLE = re.sub(r"[^A-Za-z0-9._]", "", os.environ.get("INSTAGRAM_HANDLE", ""))
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 ID_RE = re.compile(r"^[a-z0-9]{6,16}$")
 FILES = ("framed.jpg", "story.jpg")
@@ -76,6 +77,7 @@ def page(photo_id):
         .replace("{download}", html.escape(get_url(photo_id, "framed.jpg", download=True)))
         .replace("{story}", json.dumps(get_url(photo_id, "story.jpg")))
         .replace("{filename}", json.dumps(f"story-{photo_id}.jpg"))
+        .replace("{handle}", json.dumps(f"@{INSTAGRAM_HANDLE}" if INSTAGRAM_HANDLE else ""))
     )
     return respond(200, body, "text/html")
 
@@ -136,9 +138,24 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
     document.getElementById("howto").hidden = true;
     document.getElementById("hint").hidden = false;
   }
+  const handle = {handle};
+  const tagBtn = document.getElementById("tag");
+  if (handle) {
+    document.getElementById("tagline").hidden = false;
+    document.getElementById("handle").textContent = handle;
+    tagBtn.textContent = "Copy " + handle;
+    tagBtn.hidden = false;
+  }
+  function copyHandle() {
+    if (handle && navigator.clipboard) navigator.clipboard.writeText(handle).catch(() => {});
+  }
+  tagBtn.addEventListener("click", () => { copyHandle(); tagBtn.textContent = "Copied " + handle; });
   shareBtn.addEventListener("click", () => {
+    copyHandle();
     navigator.share({ files: [file] }).catch(() => {});
   });
 </script>
 <p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
+<p id="tagline" hidden>To tag <b id="handle"></b>, tap the Aa text tool in your story and paste. We copy it for you when you tap Share.</p>
+<button id="tag" class="btn dl" hidden></button>
 </body></html>"""

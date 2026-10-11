@@ -5,6 +5,7 @@ import qrcode
 from PIL import Image, ImageOps
 
 PRINT_SIZE = (1200, 1800)
+CANVAS_SIZES = {"portrait": (1200, 1800), "landscape": (1800, 1200)}
 STORY_SIZE = (1080, 1920)
 
 
@@ -14,6 +15,8 @@ class Frame:
         self.id = json_path.stem
         self.name = meta.get("name", self.id)
         self.order = meta.get("order", 100)
+        self.orientation = meta.get("orientation", "portrait")
+        self.size = CANVAS_SIZES[self.orientation]
         self.photo = meta["photo"]
         self.qr = meta["qr"]
         self.story_bg = meta.get("story_bg", "#000000")
@@ -44,7 +47,7 @@ def qr_image(url, size):
 
 
 def framed(photo, frame: Frame):
-    return _place_photo(PRINT_SIZE, frame.png, photo, frame.photo)
+    return _place_photo(frame.size, frame.png, photo, frame.photo)
 
 
 def with_qr(img, frame: Frame, url):
@@ -54,6 +57,8 @@ def with_qr(img, frame: Frame, url):
 
 
 def for_print(img, scale):
+    if img.width > img.height:
+        img = img.rotate(90, expand=True)
     if scale >= 1:
         return img
     page = Image.new("RGB", PRINT_SIZE, "white")

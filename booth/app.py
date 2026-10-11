@@ -95,14 +95,15 @@ def capture_file(name):
 
 @app.get("/api/frames")
 def list_frames():
-    return jsonify([{"id": f.id, "name": f.name} for f in frames.values()])
+    return jsonify([{"id": f.id, "name": f.name, "orientation": f.orientation,
+                     "photo_w": f.photo["w"], "photo_h": f.photo["h"]} for f in frames.values()])
 
 
 @app.get("/api/preview/<capture_id>/<frame_id>.jpg")
 def preview(capture_id, frame_id):
     frame = get_frame(frame_id)
     img = compose.with_qr(compose.framed(load_capture(capture_id), frame), frame, share_url("preview"))
-    return jpeg_response(img.resize((600, 900), compose.Image.LANCZOS))
+    return jpeg_response(img.resize((img.width // 2, img.height // 2), compose.Image.LANCZOS))
 
 
 @app.post("/api/confirm")
@@ -128,7 +129,9 @@ def confirm():
         except Exception as e:
             error = str(e)
             print(f"print failed: {error}")
-    image = "data:image/jpeg;base64," + base64.b64encode((out / "print.jpg").read_bytes()).decode()
+    buf = io.BytesIO()
+    printed.resize((printed.width // 2, printed.height // 2), compose.Image.LANCZOS).save(buf, "JPEG", quality=85)
+    image = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
     uploader.enqueue(out)
     return jsonify({"print_id": print_id, "image": image, "print_error": error})
 

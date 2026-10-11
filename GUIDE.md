@@ -71,7 +71,7 @@ The backend is an AWS SAM app in cloud/ (template.yaml + share/app.py): a privat
 Steps:
 1. Make sure the AWS CLI and AWS SAM CLI are installed (install them if not). Run `aws sts get-caller-identity` to confirm I'm logged in. If not, stop and tell me what to run to log in.
 2. Generate a booth key with `openssl rand -hex 24`.
-3. From cloud/, run `sam build`, then `sam deploy --guided` with stack name `photobooth`, region us-east-1 (unless I say otherwise), parameter BoothKey = the generated key, EventName = "<EVENT NAME>", allow SAM to create IAM roles, and save the config.
+3. From cloud/, run `sam build`, then `sam deploy --guided` with stack name `photobooth`, region us-east-1 (unless I say otherwise), parameter BoothKey = the generated key, EventName = "<EVENT NAME>", InstagramHandle = "<INSTAGRAM HANDLE WITHOUT @, or empty>", allow SAM to create IAM roles, and save the config.
 4. Test it:
    - `curl -X POST <ApiUrl>/upload -H "x-booth-key: <key>" -H "Content-Type: application/json" -d '{"id":"testabcd"}'` returns JSON with presigned URLs for framed.jpg and story.jpg.
    - PUT any JPEG to both URLs with `-H "Content-Type: image/jpeg"`, then open <ApiUrl>/p/testabcd. It should show the photo with "Share to Instagram Story" and "Download photo" buttons.
@@ -111,19 +111,20 @@ Only change app code if something doesn't work on the real hardware, and tell me
 Give this agent your assets: logo files (PNG/SVG, transparent background), event name, colors (hex), fonts, any stickers/art, a short description of the theme, how many frames you want, and one sample photo of people (for checking alignment).
 
 ```
-Make themed photo frame templates for my photobooth, using the assets I've attached. The photobooth code is in github.com/AlanRoybal/photobooth. The booth places the user's photo under a frame PNG and then draws a QR code on top. See booth/compose.py for exactly how, and booth/frames/ for 3 placeholder frames in the right format.
+Make themed photo frame templates for my photobooth, using the assets I've attached. The photobooth code is in github.com/AlanRoybal/photobooth. The booth places the user's photo under a frame PNG and then draws a QR code on top. See booth/compose.py for exactly how, and booth/frames/ for placeholder frames in the right format (3 portrait, 3 landscape).
 
-Theme: <describe the theme>. Event name: <EVENT NAME>. Colors: <hex codes>. Fonts: <fonts>. Number of frames: <N>, each a different design in the same theme.
+Theme: <describe the theme>. Event name: <EVENT NAME>. Colors: <hex codes>. Fonts: <fonts>. Number of frames: <N> portrait and <N> landscape, each a different design in the same theme. Guests pick Portrait or Landscape before the photo, and the carousel only shows frames of that orientation. If there are only portrait (or only landscape) frames, the choice is hidden.
 
 Format for each frame (id = short lowercase name, e.g. neon):
-- booth/frames/<id>.png: 1200x1800 px (4x6 in at 300 DPI, portrait), RGBA, sRGB. The photo shows through transparent pixels.
+- booth/frames/<id>.png: 1200x1800 px for portrait or 1800x1200 px for landscape (4x6 in at 300 DPI), RGBA, sRGB. The photo shows through transparent pixels. Landscape prints are rotated onto the 4x6 paper automatically.
 - booth/frames/<id>.json:
-  {"name": "Neon", "order": 0,
+  {"name": "Neon", "order": 0, "orientation": "portrait",
    "photo": {"x": 80, "y": 120, "w": 1040, "h": 1160},
    "qr": {"x": 820, "y": 1400, "size": 300},
    "story_bg": "#14143a"}
-  photo = the rectangle the camera photo fills (center-cropped to fill it). Every transparent pixel must be inside this rectangle. You can make the window rounded or any shape by keeping pixels inside the rectangle opaque. Wider windows crop less: the camera is 16:9 and very wide angle, so 1040 wide by 780-1160 tall works well.
-  qr = where the QR goes, square, at least 260 px. It's drawn black on white with its own white border, on top of the frame. The QR only appears on the printed copy. Downloads and Instagram stories show the frame without it, so put something under that spot that looks good on its own, like the event logo.
+  orientation = "portrait" or "landscape" (default portrait).
+  photo = the rectangle the camera photo fills (center-cropped to fill it). Every transparent pixel must be inside this rectangle. You can make the window rounded or any shape by keeping pixels inside the rectangle opaque. Wider windows crop less: the camera is 16:9 and very wide angle, so for portrait 1040 wide by 780-1160 tall works well, and for landscape something close to 16:9 or wider, like 1680x820 (see the landscape placeholders). The live preview dims everything outside the area the frames keep, so keep the photo windows within one orientation a similar shape.
+  qr = where the QR goes, square, at least 240 px. It's drawn black on white with its own white border, on top of the frame. The QR only appears on the printed copy. Downloads and Instagram stories show the frame without it, so put something under that spot that looks good on its own, like the event logo.
   name = shown under the carousel. order = carousel order.
   story_bg = background color for the Instagram story version (the framed photo is centered on a 1080x1920 canvas of this color).
 - Optional booth/frames/<id>.story.png: a 1080x1920 frame designed for Instagram stories, plus "story_photo": {"x":..,"y":..,"w":..,"h":..} in the JSON. Without it, the story is made automatically from story_bg.
