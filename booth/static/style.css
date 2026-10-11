@@ -40,8 +40,6 @@ body.show-live #guide { visibility: visible; }
 .secondary { color: var(--soft); background: var(--pill); }
 .pill:disabled { opacity: 0.4; }
 .circle { width: 56px; height: 56px; border-radius: 50%; background: var(--pill); color: var(--soft); font-size: 26px; }
-.badge { position: absolute; left: 28px; top: 40px; transform: translateY(-50%); opacity: var(--o, 1); padding: 8px 16px;
-  border-radius: 999px; background: rgba(18, 16, 25, 0.85); color: var(--soft); font-size: 17px; font-weight: 600; }
 .cap { width: 860px; text-align: center; transform: translate(-50%, -32px) translateY(var(--dy, 0px)); }
 .cap h2 { font-size: 40px; line-height: 64px; }
 .cap p { margin-top: 14px; font-size: 22px; color: var(--muted); }
@@ -49,11 +47,10 @@ body.show-live #guide { visibility: visible; }
 #start { background: #140C24; }
 #home-art { background: #140C24; opacity: var(--o, 1); }
 #home-art.custom { background: #140C24 url("/static/home.png") center / cover no-repeat; }
-#panel { width: 780px; height: 224px; border-radius: 32px; text-align: center; background: rgba(18, 16, 25, 0.82);
+#panel { width: 780px; height: 128px; border-radius: 32px; text-align: center; background: rgba(18, 16, 25, 0.82);
   box-shadow: 0 0 40px rgba(124, 52, 216, 0.35), inset 0 0 0 1.5px rgba(155, 92, 255, 0.45); }
-#panel h1 { margin-top: 28px; font-size: 44px; line-height: 60px; opacity: var(--t1, 1); }
-#panel p { margin-top: 2px; font-size: 20px; color: var(--muted); opacity: var(--t2, 1); }
-#steps { display: flex; justify-content: center; gap: 36px; margin-top: 26px; }
+#panel p { padding-top: 22px; font-size: 22px; font-weight: 500; color: var(--soft); opacity: var(--t2, 1); }
+#steps { display: flex; justify-content: center; gap: 36px; margin-top: 20px; }
 .step { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; color: var(--soft);
   opacity: var(--o, 1); transform: translateY(var(--dy, 0px)); }
 .step b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--violet);

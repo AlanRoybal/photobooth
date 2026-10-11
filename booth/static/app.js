@@ -66,7 +66,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const STEP = { instructions: 0, review: 1, frames: 2, printing: 3, done: 3 };
 function clearVars(root) {
   [root, ...$$(".a, .step, .art", root)].forEach((el) =>
-    ["--o", "--s", "--dy", "--dx", "--r", "--sy", "--bga", "--t1", "--t2"].forEach((p) => el.style.removeProperty(p)));
+    ["--o", "--s", "--dy", "--dx", "--r", "--sy", "--bga", "--t2"].forEach((p) => el.style.removeProperty(p)));
 }
 function screenOn(name, on = true) {
   $(name).classList.toggle("on", on);
@@ -140,12 +140,11 @@ function paintOrient() {
 function startPaint(t) {
   set($("home-art"), { o: eoc(prog(t, 0, 0.5)) });
   set($("panel"), { o: prog(t, 0.15, 0.45), s: lerp(0.9, 1, spring(t, 0.15, 0.7, 0.6)),
-    t1: eoc(prog(t, 0.3, 0.75)), t2: eoc(prog(t, 0.38, 0.83)) });
+    t2: eoc(prog(t, 0.3, 0.75)) });
   $$(".step").forEach((el, i) => {
     const s = 0.6 + 0.08 * i;
     set(el, { o: prog(t, s, s + 0.2), dy: 16 * (1 - spring(t, s, 0.6, 0.6)) });
   });
-  set($("badge"), { o: prog(t, 1.4, 1.8) });
   set($("go"), rise(spring(t, 1.4, 0.6, 0.65), prog(t, 1.4, 1.8)));
 }
 async function enterStart() {
@@ -204,7 +203,7 @@ async function stretchTo(from, btn, fade, to, enter, dur = 1.52) {
 function toInstructions() {
   setOrientation(state.orientations[0]);
   state.landscapeK = state.orientation === "landscape" ? 1 : 0;
-  return stretchTo("start", "go", [$("panel"), $("badge"), $("go")], "instructions", (u) => {
+  return stretchTo("start", "go", [$("panel"), $("go")], "instructions", (u) => {
     set($("arrow"), { dy: -70 * (1 - spring(u, 0.05, 0.8, 0.55)), o: prog(u, 0.05, 0.2) });
     state.cardS = [0.15, 0.21].map((a) => lerp(0.4, 1, spring(u, a, 0.6, 0.6)));
     state.cardO = [0.15, 0.21].map((a) => prog(u, a, a + 0.15));
@@ -557,7 +556,6 @@ async function init() {
   state.allFrames = await (await fetch("/api/frames")).json();
   state.orientations = ["portrait", "landscape"].filter((o) => state.allFrames.some((f) => f.orientation === o));
   $("orient").hidden = state.orientations.length < 2;
-  $("badge").textContent = state.cfg.title;
   $("home-art").classList.toggle("custom", !!state.cfg.home_image);
   set($("arrow"), { x: (1024 * state.cfg.camera_arrow_x_percent) / 100 });
   live.classList.toggle("mirror", state.cfg.mirror_preview);
