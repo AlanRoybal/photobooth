@@ -77,13 +77,13 @@ def guide(orientation, layout):
     d.text((cx, cy + 130), "leave this area empty: the photo goes here", font=font(34), fill=(60, 60, 60), anchor="mm")
 
     qx, qy = (qr[0] + qr[2]) // 2, (qr[1] + qr[3]) // 2
-    d.text((qx, qy - 25), "QR CODE", font=font(34, True), fill=(110, 80, 0), anchor="mm")
+    d.text((qx, qy - 25), "QR / LOGO", font=font(34, True), fill=(110, 80, 0), anchor="mm")
     d.text((qx, qy + 25), f"{q['size']} px", font=font(30), fill=(110, 80, 0), anchor="mm")
 
     notes = [
         (f"{orientation.upper()}  {w} x {h} px = {inches(w)} x {inches(h)} @ 300 DPI", True),
         (f"Yellow: QR code, {q['size']} px ({inches(q['size'])}) square at x={q['x']}, y={q['y']}. "
-         "It covers this spot on prints only. Draw your logo here for downloads and stories.", False),
+         "Leave it as plain background: the booth puts the QR here on prints and your logo file on downloads and stories.", False),
         ("Red edge (outer 36 px) may be trimmed: fill it with background art, no white.", False),
         (f"Dashed line ({SAFE} px in): keep text, faces and logos inside it.", False),
     ]

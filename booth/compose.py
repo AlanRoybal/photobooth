@@ -24,6 +24,8 @@ class Frame:
         self.png = json_path.with_suffix(".png")
         story_png = json_path.with_name(self.id + ".story.png")
         self.story_png = story_png if story_png.exists() and self.story_photo else None
+        own_logo, shared_logo = json_path.with_name(self.id + ".logo.png"), json_path.with_name("logo.png")
+        self.logo = own_logo if own_logo.exists() else shared_logo if shared_logo.exists() else None
 
 
 def load_frames(frames_dir: Path):
@@ -47,7 +49,12 @@ def qr_image(url, size):
 
 
 def framed(photo, frame: Frame):
-    return _place_photo(frame.size, frame.png, photo, frame.photo)
+    img = _place_photo(frame.size, frame.png, photo, frame.photo)
+    if frame.logo:
+        size = frame.qr["size"]
+        logo = ImageOps.contain(Image.open(frame.logo).convert("RGBA"), (size, size), Image.LANCZOS)
+        img.paste(logo, (frame.qr["x"] + (size - logo.width) // 2, frame.qr["y"] + (size - logo.height) // 2), logo)
+    return img
 
 
 def with_qr(img, frame: Frame, url):
