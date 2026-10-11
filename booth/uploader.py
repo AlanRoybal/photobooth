@@ -1,3 +1,4 @@
+import shutil
 import threading
 import time
 from pathlib import Path
@@ -8,7 +9,7 @@ FILES = ("framed.jpg", "story.jpg")
 
 
 class Uploader:
-    """Uploads finished prints to AWS, retrying until the network is available."""
+    """Uploads finished prints to AWS, retrying until the network is available, then deletes the local copy."""
 
     def __init__(self, prints_dir: Path, api_url: str, booth_key: str):
         self.prints_dir = prints_dir
@@ -37,8 +38,8 @@ class Uploader:
             with open(print_dir / name, "rb") as f:
                 put = requests.put(urls[name], data=f, headers={"Content-Type": "image/jpeg"}, timeout=60)
             put.raise_for_status()
-        (print_dir / "pending").unlink()
-        print(f"uploaded {print_dir.name}")
+        shutil.rmtree(print_dir)
+        print(f"uploaded {print_dir.name}, local copy deleted")
 
     def _loop(self):
         while True:

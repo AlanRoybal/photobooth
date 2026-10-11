@@ -1,7 +1,7 @@
+import base64
 import io
 import secrets
 import threading
-import time
 
 from flask import Flask, Response, abort, jsonify, request, send_from_directory
 
@@ -17,6 +17,14 @@ PRINTS = config.DATA_DIR / "prints"
 FRAMES_DIR = config.ROOT / "frames"
 for d in (CAPTURES, PRINTS):
     d.mkdir(parents=True, exist_ok=True)
+
+
+def clear_captures():
+    for f in CAPTURES.glob("*.jpg"):
+        f.unlink(missing_ok=True)
+
+
+clear_captures()
 
 ID_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
 app = Flask(__name__, static_folder="static", static_url_path="/static")
@@ -74,6 +82,7 @@ def stream():
 def capture():
     with capture_lock:
         img = camera.capture(mirror=cfg["mirror_photo"])
+    clear_captures()
     capture_id = new_id(12)
     img.save(CAPTURES / f"{capture_id}.jpg", "JPEG", quality=95)
     return jsonify({"capture_id": capture_id, "image": f"/captures/{capture_id}.jpg"})
@@ -110,7 +119,7 @@ def confirm():
     compose.story(photo, framed, frame).save(out / "story.jpg", "JPEG", quality=92)
     printed = compose.with_qr(framed, frame, share_url(print_id))
     compose.for_print(printed, cfg["print_scale"]).save(out / "print.jpg", "JPEG", quality=95)
-    uploader.enqueue(out)
+    clear_captures()
 
     error = None
     if cfg["print_enabled"]:
@@ -119,8 +128,9 @@ def confirm():
         except Exception as e:
             error = str(e)
             print(f"print failed: {error}")
-    return jsonify({"print_id": print_id, "image": f"/prints/{print_id}/print.jpg?t={int(time.time())}",
-                    "print_error": error})
+    image = "data:image/jpeg;base64," + base64.b64encode((out / "print.jpg").read_bytes()).decode()
+    uploader.enqueue(out)
+    return jsonify({"print_id": print_id, "image": image, "print_error": error})
 
 
 @app.get("/prints/<print_id>/<name>")
