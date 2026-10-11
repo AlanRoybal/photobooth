@@ -43,9 +43,22 @@ function setOrientation(o) {
 
 function resetIdle() {
   clearTimeout(state.idleTimer);
+  clearInterval(state.warnTimer);
+  $("idle-warn").hidden = true;
   const current = document.querySelector(".screen.active").id;
   if (["start", "countdown", "printing", "done"].includes(current)) return;
-  state.idleTimer = setTimeout(() => show("start"), state.cfg.idle_timeout_seconds * 1000);
+  const total = state.cfg.idle_timeout_seconds;
+  const warn = Math.min(10, total);
+  state.idleTimer = setTimeout(() => {
+    let left = warn;
+    $("idle-left").textContent = left;
+    $("idle-warn").hidden = false;
+    state.warnTimer = setInterval(() => {
+      left--;
+      $("idle-left").textContent = left;
+      if (left <= 0) show("start");
+    }, 1000);
+  }, (total - warn) * 1000);
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
