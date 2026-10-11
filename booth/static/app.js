@@ -21,6 +21,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function runCountdown() {
   if (state.busy) return;
   state.busy = true;
+  live.src = "/stream.mjpg?" + Date.now();
   show("countdown");
   const count = $("count");
   for (let n = state.cfg.countdown_seconds; n > 0; n--) {
