@@ -136,7 +136,6 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
     })
     .catch(fallback);
   function fallback() {
-    shareBtn.hidden = true;
     document.getElementById("howto").hidden = true;
   }
   const handle = {handle};
