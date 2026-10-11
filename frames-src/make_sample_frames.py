@@ -5,9 +5,12 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 OUT = Path(__file__).resolve().parent.parent / "booth" / "frames"
-W, H = 1200, 1800
-PHOTO = {"x": 80, "y": 120, "w": 1040, "h": 1160}
-QR = {"x": 820, "y": 1400, "size": 300}
+LAYOUTS = {
+    "portrait": {"size": (1200, 1800), "photo": {"x": 80, "y": 120, "w": 1040, "h": 1160},
+                 "qr": {"x": 820, "y": 1400, "size": 300}, "text": (90, 1400)},
+    "landscape": {"size": (1800, 1200), "photo": {"x": 60, "y": 60, "w": 1680, "h": 820},
+                  "qr": {"x": 1490, "y": 890, "size": 240}, "text": (80, 920)},
+}
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 STYLES = [
@@ -17,21 +20,25 @@ STYLES = [
 ]
 
 
-def make(fid, name, bg, fg, story_bg, order):
-    img = Image.new("RGBA", (W, H), bg)
+def make(fid, name, bg, fg, story_bg, order, orientation):
+    layout = LAYOUTS[orientation]
+    photo, qr, (tx, ty) = layout["photo"], layout["qr"], layout["text"]
+    img = Image.new("RGBA", layout["size"], bg)
     d = ImageDraw.Draw(img)
-    d.rectangle([PHOTO["x"], PHOTO["y"], PHOTO["x"] + PHOTO["w"] - 1, PHOTO["y"] + PHOTO["h"] - 1], fill=(0, 0, 0, 0))
-    d.text((90, 1400), "PHOTOBOOTH", font=ImageFont.truetype(FONT, 84), fill=fg)
-    d.text((94, 1510), name.upper() + " FRAME", font=ImageFont.truetype(FONT, 44), fill=fg)
-    d.rounded_rectangle([QR["x"], QR["y"], QR["x"] + QR["size"] - 1, QR["y"] + QR["size"] - 1], 24, outline=fg, width=6)
-    d.text((QR["x"] + QR["size"] // 2, QR["y"] + QR["size"] // 2), "LOGO", font=ImageFont.truetype(FONT, 56),
+    d.rectangle([photo["x"], photo["y"], photo["x"] + photo["w"] - 1, photo["y"] + photo["h"] - 1], fill=(0, 0, 0, 0))
+    d.text((tx, ty), "PHOTOBOOTH", font=ImageFont.truetype(FONT, 84), fill=fg)
+    d.text((tx + 4, ty + 110), name.upper() + " FRAME", font=ImageFont.truetype(FONT, 44), fill=fg)
+    d.rounded_rectangle([qr["x"], qr["y"], qr["x"] + qr["size"] - 1, qr["y"] + qr["size"] - 1], 24, outline=fg, width=6)
+    d.text((qr["x"] + qr["size"] // 2, qr["y"] + qr["size"] // 2), "LOGO", font=ImageFont.truetype(FONT, 56),
            fill=fg, anchor="mm")
     img.save(OUT / f"{fid}.png")
     (OUT / f"{fid}.json").write_text(json.dumps(
-        {"name": name, "order": order, "photo": PHOTO, "qr": QR, "story_bg": story_bg}, indent=2) + "\n")
+        {"name": name, "order": order, "orientation": orientation, "photo": photo, "qr": qr, "story_bg": story_bg},
+        indent=2) + "\n")
 
 
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     for i, s in enumerate(STYLES):
-        make(*s, order=i)
+        make(*s, order=i, orientation="portrait")
+        make(s[0] + "-landscape", *s[1:], order=i, orientation="landscape")

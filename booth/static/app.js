@@ -1,12 +1,44 @@
 const $ = (id) => document.getElementById(id);
 const live = $("live");
-const state = { cfg: null, captureId: null, frames: [], frameIndex: 0, idleTimer: null, doneTimer: null, busy: false };
+const CAMERA_ASPECT = 16 / 9;
+const SLIDES = { portrait: [280, 420], landscape: [480, 320] };
+const state = { cfg: null, captureId: null, allFrames: [], frames: [], frameIndex: 0, orientation: "portrait",
+  idleTimer: null, doneTimer: null, busy: false };
 
 function show(name) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === name));
   document.body.classList.toggle("show-live", name === "countdown");
   clearTimeout(state.doneTimer);
   resetIdle();
+}
+
+// Fraction of the camera image (width, height) that every frame of this orientation keeps after center-cropping.
+function cropFor(orientation) {
+  let fw = 1, fh = 1;
+  state.allFrames.filter((f) => f.orientation === orientation).forEach((f) => {
+    const a = f.photo_w / f.photo_h;
+    fw = Math.min(fw, a / CAMERA_ASPECT);
+    fh = Math.min(fh, CAMERA_ASPECT / a);
+  });
+  return { fw, fh };
+}
+
+function fitBox(maxW, maxH, aspect) {
+  return aspect > maxW / maxH ? [maxW, maxW / aspect] : [maxH * aspect, maxH];
+}
+
+function setOrientation(o) {
+  state.orientation = o;
+  state.frames = state.allFrames.filter((f) => f.orientation === o);
+  document.querySelectorAll("#orient button").forEach((b) => b.classList.toggle("on", b.dataset.o === o));
+  const { fw, fh } = cropFor(o);
+  const [dw, dh] = fitBox(innerWidth, innerHeight, CAMERA_ASPECT);
+  Object.assign($("guide").style, { width: `${dw * fw}px`, height: `${dh * fh}px` });
+  const [sw, sh] = fitBox(960, 470, (CAMERA_ASPECT * fw) / fh);
+  Object.assign($("shot-wrap").style, { width: `${sw}px`, height: `${sh}px` });
+  const [tw, th] = SLIDES[o];
+  $("frames").style.setProperty("--sw", `${tw}px`);
+  $("frames").style.setProperty("--sh", `${th}px`);
 }
 
 function resetIdle() {
@@ -70,7 +102,7 @@ function renderFrames() {
 function moveTo(i) {
   const n = state.frames.length;
   state.frameIndex = (i + n) % n;
-  $("track").style.transform = `translateX(${-280 * state.frameIndex}px)`;
+  $("track").style.transform = `translateX(${-SLIDES[state.orientation][0] * state.frameIndex}px)`;
   [...$("dots").children].forEach((d, j) => d.classList.toggle("on", j === state.frameIndex));
   resetIdle();
 }
@@ -119,14 +151,18 @@ function swipe(el, onLeft, onRight) {
 
 async function init() {
   state.cfg = await (await fetch("/api/config")).json();
-  state.frames = await (await fetch("/api/frames")).json();
+  state.allFrames = await (await fetch("/api/frames")).json();
+  const orientations = ["portrait", "landscape"].filter((o) => state.allFrames.some((f) => f.orientation === o));
+  $("orient").hidden = orientations.length < 2;
+  document.querySelectorAll("#orient button").forEach((b) =>
+    b.addEventListener("click", () => { setOrientation(b.dataset.o); resetIdle(); }));
   $("title").textContent = state.cfg.title;
   $("arrow").style.left = `${state.cfg.camera_arrow_x_percent}%`;
   live.classList.toggle("mirror", state.cfg.mirror_preview);
   live.src = "/stream.mjpg";
   live.onerror = () => setTimeout(() => (live.src = "/stream.mjpg?" + Date.now()), 2000);
 
-  $("start").addEventListener("click", () => show("instructions"));
+  $("start").addEventListener("click", () => { setOrientation(orientations[0]); show("instructions"); });
   $("ready").addEventListener("click", runCountdown);
   $("retake").addEventListener("click", runCountdown);
   $("next").addEventListener("click", () => { renderFrames(); show("frames"); });

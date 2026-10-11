@@ -12,6 +12,7 @@ from botocore.exceptions import ClientError
 BUCKET = os.environ["BUCKET"]
 BOOTH_KEY = os.environ["BOOTH_KEY"]
 EVENT_NAME = os.environ.get("EVENT_NAME", "Photobooth")
+INSTAGRAM_HANDLE = re.sub(r"[^A-Za-z0-9._]", "", os.environ.get("INSTAGRAM_HANDLE", ""))
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 ID_RE = re.compile(r"^[a-z0-9]{6,16}$")
 FILES = ("framed.jpg", "story.jpg")
@@ -76,6 +77,7 @@ def page(photo_id):
         .replace("{download}", html.escape(get_url(photo_id, "framed.jpg", download=True)))
         .replace("{story}", json.dumps(get_url(photo_id, "story.jpg")))
         .replace("{filename}", json.dumps(f"story-{photo_id}.jpg"))
+        .replace("{handle}", json.dumps(f"@{INSTAGRAM_HANDLE}" if INSTAGRAM_HANDLE else ""))
     )
     return respond(200, body, "text/html")
 
@@ -93,6 +95,7 @@ STYLE = """
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body { margin: 0; min-height: 100vh; background: #0b0b1a; color: #fff; text-align: center;
     font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; padding: 24px 18px 40px; }
   h1 { font-size: 24px; margin: 4px 0 18px; }
@@ -116,7 +119,8 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 <img src="{photo}" alt="Your photobooth picture">
 <button id="share" class="btn ig" disabled>Share to Instagram Story</button>
 <a class="btn dl" href="{download}">Download photo</a>
-<p id="hint" hidden>Your browser can't share files directly. Download the photo, then in Instagram tap + and choose Story.</p>
+<p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
+<p id="tagline" hidden>Share to your story and tag us! <b id="handle"></b></p>
 <script>
   const shareBtn = document.getElementById("share");
   let file = null;
@@ -132,13 +136,15 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
     })
     .catch(fallback);
   function fallback() {
-    shareBtn.hidden = true;
     document.getElementById("howto").hidden = true;
-    document.getElementById("hint").hidden = false;
+  }
+  const handle = {handle};
+  if (handle) {
+    document.getElementById("handle").textContent = handle;
+    document.getElementById("tagline").hidden = false;
   }
   shareBtn.addEventListener("click", () => {
     navigator.share({ files: [file] }).catch(() => {});
   });
 </script>
-<p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
 </body></html>"""
