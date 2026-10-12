@@ -92,6 +92,11 @@ Resources:
           Properties:
             Path: /api/photos
             Method: GET
+        Banner:
+          Type: HttpApi
+          Properties:
+            Path: /title.png
+            Method: GET
 
   Certificate:
     Type: AWS::CertificateManager::Certificate

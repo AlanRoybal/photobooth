@@ -17,6 +17,8 @@ REGION = os.environ.get("AWS_REGION", "us-east-1")
 ID_RE = re.compile(r"^[a-z0-9]{6,16}$")
 FILES = ("framed.jpg", "thumb.jpg", "story.jpg")
 GALLERY_PAGE_SIZE = 48
+with open(os.path.join(os.path.dirname(__file__), "title.png"), "rb") as f:
+    TITLE_PNG = base64.b64encode(f.read()).decode()
 
 s3 = boto3.client(
     "s3",
@@ -125,6 +127,9 @@ def handler(event, context):
         return upload(event)
     if route == "GET /":
         return respond(200, GALLERY.replace("{title}", html.escape(EVENT_NAME)), "text/html")
+    if route == "GET /title.png":
+        return {"statusCode": 200, "isBase64Encoded": True, "body": TITLE_PNG,
+                "headers": {"Content-Type": "image/png", "Cache-Control": "public, max-age=86400"}}
     if route == "GET /api/photos":
         return gallery_photos(query)
     if route == "GET /{id}/{file}":
@@ -209,7 +214,7 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """
 <style>
   body { padding: 24px 12px 40px; }
-  h1 { font-size: 26px; }
+  .banner { display: block; width: 100%; max-width: 720px; margin: 0 auto 22px; border-radius: 0; box-shadow: none; }
   #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
     max-width: 1100px; margin: 0 auto; }
   @media (min-width: 820px) { #grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; } }
@@ -220,7 +225,7 @@ GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
   #grid img { width: 100%; height: 100%; max-width: none; object-fit: contain; border-radius: 0; box-shadow: none; }
   #status { margin-top: 24px; }
 </style></head><body>
-<h1>{title}</h1>
+<img class="banner" src="/title.png" alt="{title}">
 <div id="grid"></div>
 <p id="status">Loading photos...</p>
 <script>
