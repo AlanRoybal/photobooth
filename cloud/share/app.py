@@ -180,7 +180,7 @@ STYLE = """
     clip-path: polygon(11.6px 0, 100% 0, 100% calc(100% - 11.6px), calc(100% - 11.6px) 100%, 0 100%, 0 11.6px); }
   .gal::before { background: #000; }
   p { color: var(--muted); font-size: 13px; line-height: 1.6; letter-spacing: .04em; max-width: 420px; margin: 18px auto 0; }
-  #tagline { margin: 0 auto 18px; color: var(--soft); font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  #tagline { margin: 0 auto 18px; color: var(--soft); font-size: 17px; line-height: 1.35; text-wrap: balance; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
   #tagline b { color: var(--magenta); }
   .skeleton { background-color: var(--surface); border: 1px solid var(--hairline); border-radius: 3px;
     background-image: linear-gradient(90deg, #fff0 0%, #ffffff0b 50%, #fff0 100%); background-repeat: no-repeat;
