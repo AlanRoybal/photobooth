@@ -156,9 +156,14 @@ STYLE = """
   body { margin: 0; min-height: 100vh; color: var(--fg); text-align: center; padding: 32px 20px 48px;
     font-family: satoshi, Arial, sans-serif; -webkit-font-smoothing: antialiased; background: #000
     radial-gradient(120% 55% at 50% 0%, #2a0a5c 0%, #0e011f 45%, #000 85%) no-repeat; }
-  h1 { font-weight: 900; font-size: clamp(1.75rem, 7vw, 2.5rem); line-height: 1; letter-spacing: -.02em;
-    text-transform: uppercase; margin: 6px 0 26px; }
-  .frame { display: block; width: 100%; max-width: 420px; margin: 0 auto; padding: 1px; background: rgba(255,255,255,.14); }
+  .banner { position: relative; max-width: 420px; margin: 0 auto 22px; }
+  .banner img { display: block; width: 100%; }
+  .sign-echo { position: absolute; inset: 0; opacity: 0; pointer-events: none; clip-path: inset(36% 0 43%);
+    filter: drop-shadow(-3px 0 #ff2ee6) brightness(1.35) saturate(1.5); animation: sign-signal 5s step-end 3.1s infinite; }
+  @keyframes sign-signal { 0%, 5%, to { opacity: 0; transform: none; }
+    1% { opacity: .85; clip-path: inset(30% 0 40%); transform: translate(1.1%); } 2.5% { opacity: 0; }
+    3.5% { opacity: .7; clip-path: inset(55% 0 20%); transform: translate(-.85%); } }
+  .frame { position: relative; display: block; width: 100%; max-width: 420px; margin: 0 auto; padding: 1px; background: rgba(255,255,255,.14); }
   .frame img { display: block; width: 100%; background: var(--surface); }
   .btn { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 420px;
     height: 52px; margin: 14px auto 0; padding: 0 20px; border: 0; cursor: pointer; text-decoration: none;
@@ -175,35 +180,38 @@ STYLE = """
     clip-path: polygon(11.6px 0, 100% 0, 100% calc(100% - 11.6px), calc(100% - 11.6px) 100%, 0 100%, 0 11.6px); }
   .gal::before { background: #000; }
   p { color: var(--muted); font-size: 13px; line-height: 1.6; letter-spacing: .04em; max-width: 420px; margin: 18px auto 0; }
-  #tagline { color: var(--soft); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
-  #tagline b { color: var(--magenta); font-weight: 700; }
+  #tagline { position: absolute; top: 7%; left: 50%; width: 88%; max-width: none; margin: 0; padding: 9px 14px;
+    pointer-events: none; color: #fff; font-size: clamp(14px, 4.4vw, 19px); font-weight: 900; line-height: 1.2;
+    letter-spacing: .06em; text-transform: uppercase; background: rgba(14,1,31,.78); clip-path: var(--notch);
+    text-shadow: -1px 0 #73ebff8c, 1px 0 #ff2ee699; animation: pulse 1.6s ease-in-out infinite; }
+  #tagline b { color: var(--magenta); }
+  @keyframes pulse { 0%, to { transform: translateX(-50%) rotate(-8deg) scale(1); opacity: 1; }
+    50% { transform: translateX(-50%) rotate(-8deg) scale(1.07); opacity: .82; } }
   .skeleton { background-color: var(--surface); border: 1px solid var(--hairline); border-radius: 3px;
     background-image: linear-gradient(90deg, #fff0 0%, #ffffff0b 50%, #fff0 100%); background-repeat: no-repeat;
     background-size: 200% 100%; animation: sweep 1.4s ease-in-out infinite; }
   .reveal { animation: reveal .7s var(--ease) var(--d, 0s) both; }
-  h1.reveal { animation: reveal .7s var(--ease) both, signal 1s ease-out both; }
   @keyframes reveal { from { opacity: 0; filter: blur(4px); transform: translateY(14px); } }
-  @keyframes signal { 0% { text-shadow: -2px 0 #73ebff8c, 2px 0 #ff2ee699; } 45% { text-shadow: 0 0 16px #ff2ee647; } to { text-shadow: 0 0 #0000; } }
   @keyframes sweep { 0% { background-position: 150% 0; } to { background-position: -50% 0; } }
-  @media (prefers-reduced-motion: reduce) { .reveal, h1.reveal, .skeleton, .sign-echo { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .reveal, .skeleton, .sign-echo { animation: none !important; }
+    #tagline { animation: none; transform: translateX(-50%) rotate(-8deg); } }
 </style>
 """
 
 PENDING = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>
 <meta http-equiv="refresh" content="8">""" + STYLE + """</head><body>
-<h1 class="reveal">{title}</h1>
+<div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
 <div class="frame skeleton reveal" style="--d:90ms; aspect-ratio: 2 / 3"></div>
 <p class="reveal" style="--d:.18s">Your photo is on its way. This page will refresh by itself in a few seconds.</p>
 </body></html>"""
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """</head><body>
-<h1 class="reveal">{title}</h1>
-<div class="frame reveal" style="--d:90ms"><img src="{photo}" alt="Your photobooth picture"></div>
+<div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
+<div class="frame reveal" style="--d:90ms"><img src="{photo}" alt="Your photobooth picture">
+<p id="tagline" hidden>Share to your story and tag us! <b id="handle"></b></p></div>
 <button id="share" class="btn ig reveal" style="--d:.18s" disabled><span>Share to Instagram Story</span></button>
 <a class="btn dl reveal" style="--d:.22s" href="{download}"><span>Download photo</span></a>
 <a class="btn gal reveal" style="--d:.27s" href="/"><span>View gallery</span></a>
-<p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
-<p id="tagline" hidden>Share to your story and tag us! <b id="handle"></b></p>
 <script>
   const shareBtn = document.getElementById("share");
   let file = null;
@@ -213,14 +221,9 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
       file = new File([b], {filename}, { type: "image/jpeg" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         shareBtn.disabled = false;
-      } else {
-        fallback();
       }
     })
-    .catch(fallback);
-  function fallback() {
-    document.getElementById("howto").hidden = true;
-  }
+    .catch(() => {});
   const handle = {handle};
   if (handle) {
     document.getElementById("handle").textContent = handle;
@@ -235,13 +238,7 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """
 <style>
   body { padding: 28px 12px 44px; }
-  .banner { position: relative; max-width: 720px; margin: 0 auto 28px; }
-  .banner img { display: block; width: 100%; }
-  .sign-echo { position: absolute; inset: 0; opacity: 0; pointer-events: none; clip-path: inset(36% 0 43%);
-    filter: drop-shadow(-3px 0 #ff2ee6) brightness(1.35) saturate(1.5); animation: sign-signal 5s step-end 3.1s infinite; }
-  @keyframes sign-signal { 0%, 5%, to { opacity: 0; transform: none; }
-    1% { opacity: .85; clip-path: inset(30% 0 40%); transform: translate(1.1%); } 2.5% { opacity: 0; }
-    3.5% { opacity: .7; clip-path: inset(55% 0 20%); transform: translate(-.85%); } }
+  .banner { max-width: 720px; margin-bottom: 28px; }
   #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-width: 1100px; margin: 0 auto; }
   @media (min-width: 820px) { #grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; } }
   #grid > * { aspect-ratio: 2 / 3; }
