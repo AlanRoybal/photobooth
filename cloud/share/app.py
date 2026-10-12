@@ -180,21 +180,15 @@ STYLE = """
     clip-path: polygon(11.6px 0, 100% 0, 100% calc(100% - 11.6px), calc(100% - 11.6px) 100%, 0 100%, 0 11.6px); }
   .gal::before { background: #000; }
   p { color: var(--muted); font-size: 13px; line-height: 1.6; letter-spacing: .04em; max-width: 420px; margin: 18px auto 0; }
-  #tagline { position: absolute; top: 7%; left: 50%; width: 88%; max-width: none; margin: 0; padding: 9px 14px;
-    pointer-events: none; color: #fff; font-size: clamp(14px, 4.4vw, 19px); font-weight: 900; line-height: 1.2;
-    letter-spacing: .06em; text-transform: uppercase; background: rgba(14,1,31,.78); clip-path: var(--notch);
-    text-shadow: -1px 0 #73ebff8c, 1px 0 #ff2ee699; animation: pulse 1.6s ease-in-out infinite; }
+  #tagline { margin: 0 auto 18px; color: var(--soft); font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
   #tagline b { color: var(--magenta); }
-  @keyframes pulse { 0%, to { transform: translateX(-50%) rotate(-8deg) scale(1); opacity: 1; }
-    50% { transform: translateX(-50%) rotate(-8deg) scale(1.07); opacity: .82; } }
   .skeleton { background-color: var(--surface); border: 1px solid var(--hairline); border-radius: 3px;
     background-image: linear-gradient(90deg, #fff0 0%, #ffffff0b 50%, #fff0 100%); background-repeat: no-repeat;
     background-size: 200% 100%; animation: sweep 1.4s ease-in-out infinite; }
   .reveal { animation: reveal .7s var(--ease) var(--d, 0s) both; }
   @keyframes reveal { from { opacity: 0; filter: blur(4px); transform: translateY(14px); } }
   @keyframes sweep { 0% { background-position: 150% 0; } to { background-position: -50% 0; } }
-  @media (prefers-reduced-motion: reduce) { .reveal, .skeleton, .sign-echo { animation: none !important; }
-    #tagline { animation: none; transform: translateX(-50%) rotate(-8deg); } }
+  @media (prefers-reduced-motion: reduce) { .reveal, .skeleton, .sign-echo { animation: none !important; } }
 </style>
 """
 
@@ -207,8 +201,8 @@ PENDING = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """</head><body>
 <div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
-<div class="frame reveal" style="--d:90ms"><img src="{photo}" alt="Your photobooth picture">
-<p id="tagline" hidden>Share to your story and tag us! <b id="handle"></b></p></div>
+<p id="tagline" class="reveal" style="--d:45ms" hidden>Share to your story and tag us! <b id="handle"></b></p>
+<div class="frame reveal" style="--d:90ms"><img src="{photo}" alt="Your photobooth picture"></div>
 <button id="share" class="btn ig reveal" style="--d:.18s" disabled><span>Share to Instagram Story</span></button>
 <a class="btn dl reveal" style="--d:.22s" href="{download}"><span>Download photo</span></a>
 <a class="btn gal reveal" style="--d:.27s" href="/"><span>View gallery</span></a>
