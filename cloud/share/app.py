@@ -17,8 +17,10 @@ REGION = os.environ.get("AWS_REGION", "us-east-1")
 ID_RE = re.compile(r"^[a-z0-9]{6,16}$")
 FILES = ("framed.jpg", "thumb.jpg", "story.jpg")
 GALLERY_PAGE_SIZE = 48
-with open(os.path.join(os.path.dirname(__file__), "title.png"), "rb") as f:
-    TITLE_PNG = base64.b64encode(f.read()).decode()
+ASSETS = {}
+for _name, _ctype in (("title.png", "image/png"),):
+    with open(os.path.join(os.path.dirname(__file__), _name), "rb") as f:
+        ASSETS[f"GET /{_name}"] = (_ctype, base64.b64encode(f.read()).decode())
 
 s3 = boto3.client(
     "s3",
@@ -127,9 +129,10 @@ def handler(event, context):
         return upload(event)
     if route == "GET /":
         return respond(200, GALLERY.replace("{title}", html.escape(EVENT_NAME)), "text/html")
-    if route == "GET /title.png":
-        return {"statusCode": 200, "isBase64Encoded": True, "body": TITLE_PNG,
-                "headers": {"Content-Type": "image/png", "Cache-Control": "public, max-age=86400"}}
+    if route in ASSETS:
+        ctype, body = ASSETS[route]
+        return {"statusCode": 200, "isBase64Encoded": True, "body": body,
+                "headers": {"Content-Type": ctype, "Cache-Control": "public, max-age=86400"}}
     if route == "GET /api/photos":
         return gallery_photos(query)
     if route == "GET /{id}/{file}":
@@ -141,46 +144,64 @@ def handler(event, context):
 
 STYLE = """
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0B0910">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=Orbitron:wght@700;800&display=swap">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
 <style>
+  :root { --fg: #f4f2ff; --muted: #8b93a1; --hairline: #232a36; --surface: #0e011f; --accent: #7828ff;
+    --soft: #dbc4ff; --magenta: #ff2ee6; --ease: cubic-bezier(.16, 1, .3, 1);
+    --notch: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { margin: 0; min-height: 100vh; color: #F4F2FF; text-align: center; padding: 28px 18px 44px;
-    font-family: "Chakra Petch", system-ui, sans-serif; background-color: #0B0910;
-    background-image: linear-gradient(rgba(124,52,216,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(124,52,216,.1) 1px, transparent 1px),
-      linear-gradient(180deg, #2A0E52 0%, #160A2C 320px, #0B0910 640px);
-    background-size: 40px 40px, 40px 40px, 100% 100%; background-repeat: repeat, repeat, no-repeat; }
-  h1 { font-family: "Orbitron", sans-serif; font-weight: 700; font-size: 24px; letter-spacing: .02em; margin: 4px 0 20px; }
-  img { width: 100%; max-width: 420px; border-radius: 16px;
-    box-shadow: 0 0 36px rgba(124,52,216,.4), 0 0 0 1.5px rgba(155,92,255,.45); }
-  .btn { display: block; width: 100%; max-width: 420px; margin: 14px auto 0; padding: 17px; border: 0; border-radius: 999px;
-    font-size: 18px; font-weight: 600; color: #F4F2FF; text-decoration: none; font-family: inherit;
-    transition: transform .12s ease-out, opacity .2s; -webkit-tap-highlight-color: transparent; }
-  .btn:active { transform: scale(.96); }
-  .ig { background: linear-gradient(90deg, #7828FF, #B02CE8);
-    box-shadow: 0 0 26px rgba(155,60,255,.55), inset 0 0 0 1.5px rgba(217,184,255,.55); }
-  .dl { background: #1C1826; color: #DBC4FF; }
-  .gal { background: transparent; color: #DBC4FF; box-shadow: inset 0 0 0 1.5px rgba(155,92,255,.45); }
-  .ig:disabled { opacity: .4; box-shadow: none; }
-  p { color: #948EB4; line-height: 1.45; max-width: 420px; margin: 16px auto 0; }
-  #tagline { color: #DBC4FF; }
-  #tagline b { color: #FF2EE6; }
+  body { margin: 0; min-height: 100vh; color: var(--fg); text-align: center; padding: 32px 20px 48px;
+    font-family: satoshi, Arial, sans-serif; -webkit-font-smoothing: antialiased; background: #000
+    radial-gradient(120% 55% at 50% 0%, #2a0a5c 0%, #0e011f 45%, #000 85%) no-repeat; }
+  h1 { font-weight: 900; font-size: clamp(1.75rem, 7vw, 2.5rem); line-height: 1; letter-spacing: -.02em;
+    text-transform: uppercase; margin: 6px 0 26px; }
+  .frame { display: block; width: 100%; max-width: 420px; margin: 0 auto; padding: 1px; background: rgba(255,255,255,.14); }
+  .frame img { display: block; width: 100%; background: var(--surface); }
+  .btn { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 420px;
+    height: 52px; margin: 14px auto 0; padding: 0 20px; border: 0; cursor: pointer; text-decoration: none;
+    font: 500 13px/1.3 satoshi, Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #fff;
+    clip-path: var(--notch); transition: opacity .18s, transform .12s var(--ease); -webkit-tap-highlight-color: transparent; }
+  .btn span { position: relative; }
+  .btn:hover { opacity: .9; }
+  .btn:active { transform: scale(.98); }
+  .ig { background: var(--accent); }
+  .ig:disabled { opacity: .4; cursor: default; }
+  .dl, .gal { background: rgba(219,196,255,.4); color: var(--soft); }
+  .gal { background: var(--hairline); color: var(--muted); }
+  .dl::before, .gal::before { content: ""; position: absolute; inset: 1px; background: var(--surface);
+    clip-path: polygon(11.6px 0, 100% 0, 100% calc(100% - 11.6px), calc(100% - 11.6px) 100%, 0 100%, 0 11.6px); }
+  .gal::before { background: #000; }
+  p { color: var(--muted); font-size: 13px; line-height: 1.6; letter-spacing: .04em; max-width: 420px; margin: 18px auto 0; }
+  #tagline { color: var(--soft); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+  #tagline b { color: var(--magenta); font-weight: 700; }
+  .skeleton { background-color: var(--surface); border: 1px solid var(--hairline); border-radius: 3px;
+    background-image: linear-gradient(90deg, #fff0 0%, #ffffff0b 50%, #fff0 100%); background-repeat: no-repeat;
+    background-size: 200% 100%; animation: sweep 1.4s ease-in-out infinite; }
+  .reveal { animation: reveal .7s var(--ease) var(--d, 0s) both; }
+  h1.reveal { animation: reveal .7s var(--ease) both, signal 1s ease-out both; }
+  @keyframes reveal { from { opacity: 0; filter: blur(4px); transform: translateY(14px); } }
+  @keyframes signal { 0% { text-shadow: -2px 0 #73ebff8c, 2px 0 #ff2ee699; } 45% { text-shadow: 0 0 16px #ff2ee647; } to { text-shadow: 0 0 #0000; } }
+  @keyframes sweep { 0% { background-position: 150% 0; } to { background-position: -50% 0; } }
+  @media (prefers-reduced-motion: reduce) { .reveal, h1.reveal, .skeleton, .sign-echo { animation: none !important; } }
 </style>
 """
 
 PENDING = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>
 <meta http-equiv="refresh" content="8">""" + STYLE + """</head><body>
-<h1>{title}</h1><p>Your photo is on its way. This page will refresh by itself in a few seconds.</p>
+<h1 class="reveal">{title}</h1>
+<div class="frame skeleton reveal" style="--d:90ms; aspect-ratio: 2 / 3"></div>
+<p class="reveal" style="--d:.18s">Your photo is on its way. This page will refresh by itself in a few seconds.</p>
 </body></html>"""
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """</head><body>
-<h1>{title}</h1>
-<img src="{photo}" alt="Your photobooth picture">
-<button id="share" class="btn ig" disabled>Share to Instagram Story</button>
-<a class="btn dl" href="{download}">Download photo</a>
-<a class="btn gal" href="/">View gallery</a>
+<h1 class="reveal">{title}</h1>
+<div class="frame reveal" style="--d:90ms"><img src="{photo}" alt="Your photobooth picture"></div>
+<button id="share" class="btn ig reveal" style="--d:.18s" disabled><span>Share to Instagram Story</span></button>
+<a class="btn dl reveal" style="--d:.22s" href="{download}"><span>Download photo</span></a>
+<a class="btn gal reveal" style="--d:.27s" href="/"><span>View gallery</span></a>
 <p id="howto">Tap Share to Instagram Story, pick Instagram, then Story.</p>
 <p id="tagline" hidden>Share to your story and tag us! <b id="handle"></b></p>
 <script>
@@ -213,33 +234,46 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 
 GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """
 <style>
-  body { padding: 24px 12px 40px; }
-  .banner { display: block; width: 100%; max-width: 720px; margin: 0 auto 22px; border-radius: 0; box-shadow: none; }
-  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
-    max-width: 1100px; margin: 0 auto; }
+  body { padding: 28px 12px 44px; }
+  .banner { position: relative; max-width: 720px; margin: 0 auto 28px; }
+  .banner img { display: block; width: 100%; }
+  .sign-echo { position: absolute; inset: 0; opacity: 0; pointer-events: none; clip-path: inset(36% 0 43%);
+    filter: drop-shadow(-3px 0 #ff2ee6) brightness(1.35) saturate(1.5); animation: sign-signal 5s step-end 3.1s infinite; }
+  @keyframes sign-signal { 0%, 5%, to { opacity: 0; transform: none; }
+    1% { opacity: .85; clip-path: inset(30% 0 40%); transform: translate(1.1%); } 2.5% { opacity: 0; }
+    3.5% { opacity: .7; clip-path: inset(55% 0 20%); transform: translate(-.85%); } }
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-width: 1100px; margin: 0 auto; }
   @media (min-width: 820px) { #grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; } }
-  #grid a { display: block; aspect-ratio: 2 / 3; border-radius: 16px; overflow: hidden; background: #121019;
-    box-shadow: inset 0 0 0 1.5px rgba(155,92,255,.25); transition: transform .15s ease-out, box-shadow .15s; }
-  #grid a:hover { transform: translateY(-3px); box-shadow: 0 0 24px rgba(124,52,216,.45), inset 0 0 0 1.5px rgba(155,92,255,.6); }
-  #grid a:active { transform: scale(.97); }
-  #grid img { width: 100%; height: 100%; max-width: none; object-fit: contain; border-radius: 0; box-shadow: none; }
-  #status { margin-top: 24px; }
+  #grid > * { aspect-ratio: 2 / 3; }
+  #grid a { display: block; padding: 1px; background: rgba(255,255,255,.14); transition: background .3s, transform .12s var(--ease); }
+  #grid a:hover, #grid a:focus-visible { background: rgba(255,255,255,.42); outline: none; }
+  #grid a:active { transform: scale(.98); }
+  #grid img { display: block; width: 100%; height: 100%; object-fit: contain; background: var(--surface); }
+  #status { margin-top: 26px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 </style></head><body>
-<img class="banner" src="/title.png" alt="{title}">
+<div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
 <div id="grid"></div>
 <p id="status">Loading photos...</p>
 <script>
   const grid = document.getElementById("grid");
   const status = document.getElementById("status");
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement("div");
+    s.className = "skeleton placeholder";
+    grid.appendChild(s);
+  }
   let next = 0, loading = false;
   async function more() {
     if (loading || next === null) return;
     loading = true;
     try {
       const data = await (await fetch("/api/photos?start=" + next)).json();
-      data.photos.forEach((p) => {
+      grid.querySelectorAll(".placeholder").forEach((s) => s.remove());
+      data.photos.forEach((p, i) => {
         const a = document.createElement("a");
         a.href = "/" + p.id;
+        a.className = "reveal";
+        a.style.setProperty("--d", (i % 12) * 40 + "ms");
         const img = document.createElement("img");
         img.src = p.src;
         img.loading = "lazy";
@@ -250,6 +284,7 @@ GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
       next = data.next;
       status.textContent = grid.children.length ? (next === null ? "" : "Loading more...") : "No photos yet. Check back soon!";
     } catch (e) {
+      grid.querySelectorAll(".placeholder").forEach((s) => s.remove());
       status.textContent = "Couldn't load photos. Pull down to refresh.";
     }
     loading = false;
