@@ -28,9 +28,6 @@ def make(fid, name, bg, fg, story_bg, order, orientation):
     d.rectangle([photo["x"], photo["y"], photo["x"] + photo["w"] - 1, photo["y"] + photo["h"] - 1], fill=(0, 0, 0, 0))
     d.text((tx, ty), "PHOTOBOOTH", font=ImageFont.truetype(FONT, 84), fill=fg)
     d.text((tx + 4, ty + 110), name.upper() + " FRAME", font=ImageFont.truetype(FONT, 44), fill=fg)
-    d.rounded_rectangle([qr["x"], qr["y"], qr["x"] + qr["size"] - 1, qr["y"] + qr["size"] - 1], 24, outline=fg, width=6)
-    d.text((qr["x"] + qr["size"] // 2, qr["y"] + qr["size"] // 2), "LOGO", font=ImageFont.truetype(FONT, 56),
-           fill=fg, anchor="mm")
     img.save(OUT / f"{fid}.png")
     (OUT / f"{fid}.json").write_text(json.dumps(
         {"name": name, "order": order, "orientation": orientation, "photo": photo, "qr": qr, "story_bg": story_bg},
