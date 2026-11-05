@@ -79,7 +79,8 @@ def index():
 @app.get("/api/config")
 def ui_config():
     keys = ("title", "countdown_seconds", "idle_timeout_seconds", "done_screen_seconds",
-            "camera_arrow_x_percent", "mirror_preview", "screen_rotate_180")
+            "camera_arrow_x_percent", "mirror_preview", "screen_rotate_180",
+            "screen_tilt_deg")
     home = config.ROOT / "static" / "home.png"
     return jsonify({**{k: cfg[k] for k in keys}, "home_image": home.exists()})
 

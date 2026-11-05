@@ -552,7 +552,7 @@ async function init() {
   fit();
   addEventListener("resize", fit);
   state.cfg = await (await fetch("/api/config")).json();
-  document.body.classList.toggle("flip", !!state.cfg.screen_rotate_180);
+  document.body.style.transform = `rotate(${(state.cfg.screen_rotate_180 ? 180 : 0) + state.cfg.screen_tilt_deg}deg)`;
   state.allFrames = await (await fetch("/api/frames")).json();
   state.orientations = ["portrait", "landscape"].filter((o) => state.allFrames.some((f) => f.orientation === o));
   $("orient").hidden = state.orientations.length < 2;

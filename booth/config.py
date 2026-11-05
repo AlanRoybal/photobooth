@@ -25,6 +25,7 @@ DEFAULTS = {
     "upload_api_url": "",
     "booth_key": "",
     "screen_rotate_180": False,
+    "screen_tilt_deg": 0.0,
 }
 
 

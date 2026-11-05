@@ -6,7 +6,6 @@
 :root { --bg: #0B0910; --panel: #121019; --pill: #1C1826; --track: #2A2440; --text: #F4F2FF; --soft: #DBC4FF;
   --muted: #948EB4; --violet: #7C34D8; --magenta: #FF2EE6; --cyan: #22E0FF; }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
-body.flip { transform: rotate(180deg); }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: var(--text);
   font-family: "Chakra Petch", system-ui, sans-serif; cursor: none; touch-action: none; }
 button { font: inherit; border: 0; color: inherit; background: none; }
