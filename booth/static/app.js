@@ -539,7 +539,7 @@ function swipe(el, onLeft, onRight) {
   el.addEventListener("touchstart", (e) => (x0 = e.touches[0].clientX), { passive: true });
   el.addEventListener("touchend", (e) => {
     if (x0 === null) return;
-    const dx = e.changedTouches[0].clientX - x0;
+    const dx = (e.changedTouches[0].clientX - x0) * (state.cfg.screen_rotate_180 ? -1 : 1);
     if (dx < -40) onLeft();
     if (dx > 40) onRight();
     x0 = null;
@@ -552,6 +552,7 @@ async function init() {
   fit();
   addEventListener("resize", fit);
   state.cfg = await (await fetch("/api/config")).json();
+  document.body.style.transform = `rotate(${(state.cfg.screen_rotate_180 ? 180 : 0) + state.cfg.screen_tilt_deg}deg)`;
   state.allFrames = await (await fetch("/api/frames")).json();
   state.orientations = ["portrait", "landscape"].filter((o) => state.allFrames.some((f) => f.orientation === o));
   $("orient").hidden = state.orientations.length < 2;
