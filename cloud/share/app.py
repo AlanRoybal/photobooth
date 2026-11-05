@@ -10,18 +10,47 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 
 BUCKET = os.environ["BUCKET"]
-BOOTH_KEY = os.environ["BOOTH_KEY"]
+BOOTH_KEY = os.environ.get("BOOTH_KEY", "")
+ADMIN_KEY = os.environ.get("ADMIN_KEY", "")
 EVENT_NAME = os.environ.get("EVENT_NAME", "Photobooth")
 INSTAGRAM_HANDLE = re.sub(r"[^A-Za-z0-9._]", "", os.environ.get("INSTAGRAM_HANDLE", ""))
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 ID_RE = re.compile(r"^[a-z0-9]{6,16}$")
 FILES = ("framed.jpg", "thumb.jpg", "story.jpg")
 GALLERY_PAGE_SIZE = 48
+# Rekognition moderation labels (or their parents) that keep a photo out of the gallery
+FLAG_LABELS = {"Explicit", "Explicit Nudity", "Non-Explicit Nudity", "Obstructed Intimate Parts",
+               "Graphic Violence", "Visually Disturbing", "Rude Gestures", "Hate Symbols"}
+MIN_LABEL_CONFIDENCE = 60
+MIN_TEXT_CONFIDENCE = 80
+LEET = str.maketrans("013457@$!", "oieastasi")
 ASSETS = {}
 for _name, _ctype in (("title.png", "image/png"),):
     with open(os.path.join(os.path.dirname(__file__), _name), "rb") as f:
         ASSETS[f"GET /{_name}"] = (_ctype, base64.b64encode(f.read()).decode())
 
+
+
+def tokens(text):
+    return re.sub(r"[^a-z]+", " ", text.lower().translate(LEET)).split()
+
+
+def load_bad_words():
+    words, phrases = set(), set()
+    with open(os.path.join(os.path.dirname(__file__), "badwords.txt"), encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            toks = tokens(line)
+            if len(toks) == 1:
+                words.add(toks[0])
+            elif toks and min(map(len, toks)) > 1:
+                phrases.add(" ".join(toks))
+    return words, phrases
+
+
+BAD_WORDS, BAD_PHRASES = load_bad_words()
+rekognition = boto3.client("rekognition", region_name=REGION)
 s3 = boto3.client(
     "s3",
     region_name=REGION,
@@ -42,7 +71,7 @@ def key(photo_id, name):
 
 def upload(event):
     sent = (event.get("headers") or {}).get("x-booth-key", "")
-    if not hmac.compare_digest(sent.encode(), BOOTH_KEY.encode()):
+    if not BOOTH_KEY or not hmac.compare_digest(sent.encode(), BOOTH_KEY.encode()):
         return respond(403, {"error": "forbidden"})
     raw = event.get("body") or "{}"
     if event.get("isBase64Encoded"):
@@ -95,20 +124,32 @@ def page(photo_id):
     return respond(200, body, "text/html")
 
 
-def list_photos():
-    """Finished uploads (story.jpg is uploaded last), newest first."""
-    photos, has_thumb = {}, set()
+def scan():
+    """(id, file names) of finished uploads (story.jpg is uploaded last), newest first."""
+    files, done = {}, {}
     for page_ in s3.get_paginator("list_objects_v2").paginate(Bucket=BUCKET, Prefix="prints/"):
         for obj in page_.get("Contents", []):
             parts = obj["Key"].split("/")
             if len(parts) != 3:
                 continue
+            files.setdefault(parts[1], set()).add(parts[2])
             if parts[2] == "story.jpg":
-                photos[parts[1]] = obj["LastModified"]
-            elif parts[2] == "thumb.jpg":
-                has_thumb.add(parts[1])
-    ordered = sorted(photos, key=photos.get, reverse=True)
-    return [{"id": i, "src": f"/{i}/{'thumb' if i in has_thumb else 'framed'}.jpg"} for i in ordered]
+                done[parts[1]] = obj["LastModified"]
+    return [(i, files[i]) for i in sorted(done, key=done.get, reverse=True)]
+
+
+def status(names):
+    """Moderation verdict, stored as an empty-ish marker object next to the photo."""
+    return "hidden" if "hidden" in names else "visible" if "visible" in names else "pending"
+
+
+def thumb(photo_id, names):
+    return f"/{photo_id}/{'thumb' if 'thumb.jpg' in names else 'framed'}.jpg"
+
+
+def list_photos():
+    """Finished uploads that passed moderation, newest first."""
+    return [{"id": i, "src": thumb(i, n)} for i, n in scan() if status(n) == "visible"]
 
 
 def gallery_photos(query):
@@ -119,6 +160,88 @@ def gallery_photos(query):
     photos = list_photos()
     end = start + GALLERY_PAGE_SIZE
     return respond(200, {"photos": photos[start:end], "next": end if end < len(photos) else None})
+
+
+def profanity(lines):
+    found = set()
+    for line in lines:
+        toks = tokens(line)
+        found |= BAD_WORDS.intersection(toks)
+        joined = f" {' '.join(toks)} "
+        found |= {p for p in BAD_PHRASES if f" {p} " in joined}
+        run = ""
+        for t in toks + [""]:  # catch spelled-out words like "F U C K"
+            if len(t) == 1:
+                run += t
+            else:
+                if run in BAD_WORDS:
+                    found.add(run)
+                run = ""
+    return sorted(found)
+
+
+def set_status(photo_id, visible, by, reasons=()):
+    on, off = ("visible", "hidden") if visible else ("hidden", "visible")
+    s3.put_object(Bucket=BUCKET, Key=key(photo_id, on), ContentType="application/json",
+                  Body=json.dumps({"by": by, "reasons": list(reasons)}).encode())
+    s3.delete_object(Bucket=BUCKET, Key=key(photo_id, off))
+    return {"id": photo_id, "status": on, "by": by, "reasons": list(reasons)}
+
+
+def moderate(photo_id):
+    image_ = {"S3Object": {"Bucket": BUCKET, "Name": key(photo_id, "framed.jpg")}}
+    labels = rekognition.detect_moderation_labels(Image=image_, MinConfidence=MIN_LABEL_CONFIDENCE)["ModerationLabels"]
+    reasons = sorted({lb["Name"] for lb in labels if {lb["Name"], lb.get("ParentName")} & FLAG_LABELS})
+    lines = [t["DetectedText"] for t in rekognition.detect_text(Image=image_)["TextDetections"]
+             if t["Type"] == "LINE" and t["Confidence"] >= MIN_TEXT_CONFIDENCE]
+    reasons += [f"Text: {w}" for w in profanity(lines)]
+    result = set_status(photo_id, not reasons, "auto", reasons)
+    print(json.dumps(result))
+    return result
+
+
+def photo_files(photo_id):
+    resp = s3.list_objects_v2(Bucket=BUCKET, Prefix=f"prints/{photo_id}/")
+    return {obj["Key"].split("/")[2] for obj in resp.get("Contents", [])}
+
+
+def moderate_handler(event, context):
+    """Runs on S3 "Object Created" events for story.jpg, or directly with {"backfill": true}."""
+    if event.get("backfill"):
+        ids = [i for i, n in scan() if status(n) == "pending"]
+    else:
+        photo_id = event["detail"]["object"]["key"].split("/")[1]
+        ids = [photo_id] if ID_RE.match(photo_id) and status(photo_files(photo_id)) == "pending" else []
+    for photo_id in ids:
+        moderate(photo_id)
+    return {"moderated": ids}
+
+
+def is_admin(event):
+    sent = (event.get("headers") or {}).get("x-admin-key", "")
+    return bool(ADMIN_KEY) and hmac.compare_digest(sent.encode(), ADMIN_KEY.encode())
+
+
+def admin_photos():
+    photos = []
+    for i, n in scan():
+        p = {"id": i, "src": thumb(i, n), "status": status(n), "by": "", "reasons": []}
+        if p["status"] == "hidden":
+            try:
+                p.update(json.loads(s3.get_object(Bucket=BUCKET, Key=key(i, "hidden"))["Body"].read()))
+            except (ClientError, ValueError):
+                pass
+        photos.append(p)
+    return respond(200, {"photos": photos})
+
+
+def admin_set(photo_id, event):
+    if not ID_RE.match(photo_id):
+        return respond(404, {"error": "not found"})
+    raw = event.get("body") or "{}"
+    if event.get("isBase64Encoded"):
+        raw = base64.b64decode(raw).decode()
+    return respond(200, set_status(photo_id, bool(json.loads(raw).get("visible")), "admin"))
 
 
 def handler(event, context):
@@ -135,6 +258,14 @@ def handler(event, context):
                 "headers": {"Content-Type": ctype, "Cache-Control": "public, max-age=86400"}}
     if route == "GET /api/photos":
         return gallery_photos(query)
+    if route == "GET /admin":
+        return respond(200, ADMIN.replace("{title}", html.escape(EVENT_NAME)), "text/html")
+    if route.startswith(("GET /api/admin/", "POST /api/admin/")) and not is_admin(event):
+        return respond(403, {"error": "forbidden"})
+    if route == "GET /api/admin/photos":
+        return admin_photos()
+    if route == "POST /api/admin/photos/{id}":
+        return admin_set(params.get("id", ""), event)
     if route == "GET /{id}/{file}":
         return image(params.get("id", ""), params.get("file", ""), query)
     if route in ("GET /{id}", "GET /p/{id}"):
@@ -282,5 +413,124 @@ GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
   }
   new IntersectionObserver((entries) => { if (entries[0].isIntersecting) more(); }).observe(status);
   more();
+</script>
+</body></html>"""
+
+ADMIN = """<!doctype html><html><head><meta charset="utf-8"><title>Admin - {title}</title>
+<meta name="robots" content="noindex">""" + STYLE + """
+<style>
+  body { padding: 28px 12px 44px; }
+  h1 { margin: 0; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; }
+  #login { max-width: 420px; margin: 32px auto 0; }
+  #login input { width: 100%; height: 52px; padding: 0 16px; border: 1px solid var(--hairline); background: var(--surface);
+    color: var(--fg); font: 15px satoshi, Arial, sans-serif; }
+  .tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 16px 0 22px; }
+  .tabs button, .card button { height: 36px; padding: 0 14px; border: 0; cursor: pointer; color: var(--fg); background: var(--hairline);
+    font: 500 12px satoshi, Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+  .tabs button.on { background: var(--accent); }
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-width: 1100px; margin: 0 auto; }
+  .card { padding: 6px; border: 1px solid var(--hairline); background: var(--surface); text-align: left; }
+  .card img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: contain; background: #000; }
+  .card.hidden img { opacity: .35; filter: grayscale(1); }
+  .tag { margin: 8px 2px 2px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .visible .tag { color: #5be37d; } .hidden .tag { color: var(--magenta); } .pending .tag { color: var(--muted); }
+  .why { min-height: 1.4em; margin: 0 2px 8px; color: var(--muted); font-size: 12px; }
+  .card button { width: 100%; }
+  .card.visible button { background: #5a1030; }
+  .card button:disabled { opacity: .5; cursor: default; }
+</style></head><body>
+<h1>Gallery moderation</h1>
+<form id="login" hidden>
+  <input id="password" type="password" placeholder="Admin password" autocomplete="current-password">
+  <button class="btn ig"><span>Sign in</span></button>
+  <p id="error"></p>
+</form>
+<div id="app" hidden>
+  <div class="tabs" id="tabs"></div>
+  <div id="grid"></div>
+  <p id="status"></p>
+</div>
+<script>
+  const STORE = "photobooth-admin-key";
+  const FILTERS = { all: "All", visible: "In gallery", hidden: "Hidden", pending: "Checking" };
+  const LABELS = { visible: "In gallery", hidden: "Hidden", pending: "Checking..." };
+  let key = localStorage.getItem(STORE) || "", photos = [], filter = "all";
+  const $ = (id) => document.getElementById(id);
+
+  function signOut(message) {
+    localStorage.removeItem(STORE);
+    key = "";
+    $("app").hidden = true;
+    $("login").hidden = false;
+    $("error").textContent = message || "";
+  }
+  async function api(path, options = {}) {
+    const r = await fetch(path, { ...options, headers: { "x-admin-key": key, "Content-Type": "application/json" } });
+    if (r.status === 403) { signOut("Wrong password."); throw new Error("forbidden"); }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }
+  async function load() {
+    if (!key) return signOut();
+    try {
+      photos = (await api("/api/admin/photos")).photos;
+      $("login").hidden = true;
+      $("app").hidden = false;
+      $("status").textContent = "";
+      render();
+    } catch (e) {
+      if (key) $("status").textContent = "Couldn't load photos. Retrying...";
+    }
+  }
+  function render() {
+    $("tabs").replaceChildren(...Object.entries(FILTERS).map(([f, label]) => {
+      const b = document.createElement("button");
+      const n = f === "all" ? photos.length : photos.filter((p) => p.status === f).length;
+      b.textContent = label + " (" + n + ")";
+      b.className = f === filter ? "on" : "";
+      b.onclick = () => { filter = f; render(); };
+      return b;
+    }));
+    const shown = photos.filter((p) => filter === "all" || p.status === filter);
+    $("grid").replaceChildren(...shown.map((p) => {
+      const card = document.createElement("div");
+      card.className = "card " + p.status;
+      const link = document.createElement("a");
+      link.href = "/" + p.id;
+      link.target = "_blank";
+      const img = document.createElement("img");
+      img.src = p.src;
+      img.loading = "lazy";
+      img.alt = "";
+      link.appendChild(img);
+      const tag = document.createElement("div");
+      tag.className = "tag";
+      tag.textContent = LABELS[p.status];
+      const why = document.createElement("div");
+      why.className = "why";
+      why.textContent = p.reasons.length ? p.reasons.join(", ") : p.by === "admin" ? "Changed by admin" : "";
+      const button = document.createElement("button");
+      button.textContent = p.status === "visible" ? "Hide" : "Show in gallery";
+      button.onclick = async () => {
+        button.disabled = true;
+        try {
+          Object.assign(p, await api("/api/admin/photos/" + p.id, {
+            method: "POST", body: JSON.stringify({ visible: p.status !== "visible" }) }));
+          render();
+        } catch (e) { button.disabled = false; }
+      };
+      card.append(link, tag, why, button);
+      return card;
+    }));
+    $("status").textContent = shown.length ? "" : "No photos here.";
+  }
+  $("login").onsubmit = (e) => {
+    e.preventDefault();
+    key = $("password").value;
+    localStorage.setItem(STORE, key);
+    load();
+  };
+  load();
+  setInterval(() => { if (key && !document.hidden) load(); }, 20000);
 </script>
 </body></html>"""
