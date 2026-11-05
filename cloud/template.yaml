@@ -8,6 +8,11 @@ Parameters:
     NoEcho: true
     MinLength: 16
     Description: Shared secret the Pi sends when uploading photos
+  AdminKey:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: Password for the /admin gallery moderation page (leave empty to disable the page)
   EventName:
     Type: String
     Default: Photobooth
@@ -37,6 +42,9 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
       CorsConfiguration:
         CorsRules:
           - AllowedMethods: [GET, HEAD]
@@ -56,6 +64,7 @@ Resources:
         Variables:
           BUCKET: !Ref PhotoBucket
           BOOTH_KEY: !Ref BoothKey
+          ADMIN_KEY: !Ref AdminKey
           EVENT_NAME: !Ref EventName
           INSTAGRAM_HANDLE: !Ref InstagramHandle
       Policies:
@@ -97,6 +106,55 @@ Resources:
           Properties:
             Path: /title.png
             Method: GET
+        AdminPage:
+          Type: HttpApi
+          Properties:
+            Path: /admin
+            Method: GET
+        AdminPhotos:
+          Type: HttpApi
+          Properties:
+            Path: /api/admin/photos
+            Method: GET
+        AdminSetPhoto:
+          Type: HttpApi
+          Properties:
+            Path: /api/admin/photos/{id}
+            Method: POST
+
+  # Checks each finished upload with Rekognition and marks it visible or hidden in the gallery
+  ModerateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: share/
+      Handler: app.moderate_handler
+      Runtime: python3.12
+      MemorySize: 256
+      Timeout: 300
+      Environment:
+        Variables:
+          BUCKET: !Ref PhotoBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref PhotoBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - rekognition:DetectModerationLabels
+                - rekognition:DetectText
+              Resource: "*"
+      Events:
+        StoryUploaded:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source: [aws.s3]
+              detail-type: [Object Created]
+              detail:
+                bucket:
+                  name: [!Ref PhotoBucket]
+                object:
+                  key: [{ suffix: /story.jpg }]
 
   Certificate:
     Type: AWS::CertificateManager::Certificate
@@ -148,3 +206,6 @@ Outputs:
     Value: !Sub "https://${DomainName}"
   BucketName:
     Value: !Ref PhotoBucket
+  ModerateFunctionName:
+    Description: Invoke with {"backfill":true} to check photos uploaded before moderation existed
+    Value: !Ref ModerateFunction
