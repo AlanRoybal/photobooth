@@ -24,6 +24,12 @@ DEFAULTS = {
     "share_base_url": "",
     "upload_api_url": "",
     "booth_key": "",
+    "screen_rotate_deg": 0.0,
+    "screen_offset_x": 0,
+    "screen_offset_y": 0,
+    "screen_scale_x": 1.0,
+    "screen_scale_y": 1.0,
+    "screen_calibrate": False,
 }
 
 

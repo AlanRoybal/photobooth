@@ -84,6 +84,14 @@ def ui_config():
     return jsonify({**{k: cfg[k] for k in keys}, "home_image": home.exists()})
 
 
+@app.get("/api/display")
+def display_config():
+    live = config.load()
+    keys = ("screen_rotate_deg", "screen_offset_x", "screen_offset_y", "screen_scale_x", "screen_scale_y",
+            "screen_calibrate")
+    return jsonify({k: live[k] for k in keys})
+
+
 @app.get("/stream.mjpg")
 def stream():
     return Response(camera.mjpeg(), mimetype="multipart/x-mixed-replace; boundary=frame")

@@ -106,3 +106,11 @@ body.show-live #guide { visibility: visible; }
 #idle-ring { width: 132px; height: 132px; }
 #idle-ring svg { width: 100%; height: 100%; }
 #idle-num { position: absolute; inset: 0; display: grid; place-items: center; font-size: 44px; font-weight: 800; }
+
+#calib { position: fixed; inset: 0; z-index: 99; pointer-events: none; outline: 4px solid #22E0FF; outline-offset: -4px;
+  background-image: linear-gradient(rgba(255, 46, 230, 0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 46, 230, 0.7) 1px, transparent 1px);
+  background-size: 50px 50px; background-position: center; }
+#calib[hidden] { display: none; }
+#calib i { position: absolute; background: #fff; }
+#calib .h { left: 0; right: 0; top: calc(50% - 1px); height: 2px; }
+#calib .v { top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; }
