@@ -5,7 +5,7 @@ const CAMERA_ASPECT = 16 / 9;
 const CARD_W = { portrait: 186, landscape: 360 };
 const state = { cfg: null, captureId: null, allFrames: [], frames: [], frameIndex: 0, orientation: "portrait",
   landscapeK: 0, cardS: [1, 1], cardO: [1, 1], pos: 0, idleTimer: null, warnTimer: null, doneTimer: null,
-  lock: false, screen: "start", run: 0, orientations: ["portrait"], screenRotate: 0 };
+  lock: false, screen: "start", run: 0, orientations: ["portrait"] };
 
 // Motion helpers (same formulas as the Figma "00 Read me" page).
 const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -535,27 +535,15 @@ function resetIdle() {
 }
 
 function swipe(el, onLeft, onRight) {
-  let x0 = null, y0 = null;
-  el.addEventListener("touchstart", (e) => ([x0, y0] = [e.touches[0].clientX, e.touches[0].clientY]), { passive: true });
+  let x0 = null;
+  el.addEventListener("touchstart", (e) => (x0 = e.touches[0].clientX), { passive: true });
   el.addEventListener("touchend", (e) => {
     if (x0 === null) return;
-    const rad = (state.screenRotate * Math.PI) / 180;
-    const t = e.changedTouches[0];
-    const dx = (t.clientX - x0) * Math.cos(rad) + (t.clientY - y0) * Math.sin(rad);
+    const dx = (e.changedTouches[0].clientX - x0) * (state.cfg.screen_rotate_180 ? -1 : 1);
     if (dx < -40) onLeft();
     if (dx > 40) onRight();
     x0 = null;
   });
-}
-
-// Compensates for how the panel sits in the enclosure (upside down, tilted, off-center).
-async function syncDisplay() {
-  try {
-    const d = await (await fetch("/api/display")).json();
-    state.screenRotate = d.screen_rotate_deg;
-    document.body.style.transform = `rotate(${d.screen_rotate_deg}deg) translate(${d.screen_offset_x}px, ${d.screen_offset_y}px) scale(${d.screen_scale_x}, ${d.screen_scale_y})`;
-    $("calib").hidden = !d.screen_calibrate;
-  } catch {}
 }
 
 function fit() { $("stage").style.setProperty("--fit", Math.min(innerWidth / 1024, innerHeight / 600)); }
@@ -563,9 +551,8 @@ function fit() { $("stage").style.setProperty("--fit", Math.min(innerWidth / 102
 async function init() {
   fit();
   addEventListener("resize", fit);
-  await syncDisplay();
-  setInterval(syncDisplay, 2000);
   state.cfg = await (await fetch("/api/config")).json();
+  document.body.classList.toggle("flip", !!state.cfg.screen_rotate_180);
   state.allFrames = await (await fetch("/api/frames")).json();
   state.orientations = ["portrait", "landscape"].filter((o) => state.allFrames.some((f) => f.orientation === o));
   $("orient").hidden = state.orientations.length < 2;

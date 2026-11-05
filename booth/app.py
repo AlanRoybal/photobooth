@@ -79,17 +79,9 @@ def index():
 @app.get("/api/config")
 def ui_config():
     keys = ("title", "countdown_seconds", "idle_timeout_seconds", "done_screen_seconds",
-            "camera_arrow_x_percent", "mirror_preview")
+            "camera_arrow_x_percent", "mirror_preview", "screen_rotate_180")
     home = config.ROOT / "static" / "home.png"
     return jsonify({**{k: cfg[k] for k in keys}, "home_image": home.exists()})
-
-
-@app.get("/api/display")
-def display_config():
-    live = config.load()
-    keys = ("screen_rotate_deg", "screen_offset_x", "screen_offset_y", "screen_scale_x", "screen_scale_y",
-            "screen_calibrate")
-    return jsonify({k: live[k] for k in keys})
 
 
 @app.get("/stream.mjpg")
