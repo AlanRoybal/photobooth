@@ -28,6 +28,10 @@ ASSETS = {}
 for _name, _ctype in (("title.png", "image/png"),):
     with open(os.path.join(os.path.dirname(__file__), _name), "rb") as f:
         ASSETS[f"GET /{_name}"] = (_ctype, base64.b64encode(f.read()).decode())
+SITE_ASSETS = {}
+for _name in os.listdir(os.path.join(os.path.dirname(__file__), "assets")):
+    with open(os.path.join(os.path.dirname(__file__), "assets", _name), "rb") as f:
+        SITE_ASSETS[_name] = ("image/png" if _name.endswith(".png") else "image/webp", base64.b64encode(f.read()).decode())
 
 
 
@@ -252,8 +256,10 @@ def handler(event, context):
         return upload(event)
     if route == "GET /":
         return respond(200, GALLERY.replace("{title}", html.escape(EVENT_NAME)), "text/html")
-    if route in ASSETS:
-        ctype, body = ASSETS[route]
+    if route == "GET /assets/{name}" and params.get("name") in SITE_ASSETS:
+        route = params["name"]
+    if route in ASSETS or route in SITE_ASSETS:
+        ctype, body = ASSETS.get(route) or SITE_ASSETS[route]
         return {"statusCode": 200, "isBase64Encoded": True, "body": body,
                 "headers": {"Content-Type": ctype, "Cache-Control": "public, max-age=86400"}}
     if route == "GET /api/photos":
@@ -284,7 +290,7 @@ STYLE = """
     --notch: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { margin: 0; min-height: 100vh; color: var(--fg); text-align: center; padding: 32px 20px 48px;
+  body { position: relative; isolation: isolate; margin: 0; min-height: 100vh; color: var(--fg); text-align: center; padding: 32px 20px 48px;
     font-family: satoshi, Arial, sans-serif; -webkit-font-smoothing: antialiased; background: #000
     radial-gradient(120% 55% at 50% 0%, #2a0a5c 0%, #0e011f 45%, #000 85%) no-repeat; }
   .banner { position: relative; max-width: 420px; margin: 0 auto 22px; }
@@ -294,7 +300,12 @@ STYLE = """
   @keyframes sign-signal { 0%, 5%, to { opacity: 0; transform: none; }
     1% { opacity: .85; clip-path: inset(30% 0 40%); transform: translate(1.1%); } 2.5% { opacity: 0; }
     3.5% { opacity: .7; clip-path: inset(55% 0 20%); transform: translate(-.85%); } }
-  .frame { position: relative; display: block; width: 100%; max-width: 420px; margin: 0 auto; padding: 1px; background: rgba(255,255,255,.14); }
+  .scene { position: absolute; inset: 0 0 auto; height: min(80vh, 760px); z-index: -1; pointer-events: none; opacity: .6;
+    background: url(/assets/skyline.webp) 50% 0 / cover no-repeat;
+    -webkit-mask-image: linear-gradient(#000 25%, transparent); mask-image: linear-gradient(#000 25%, transparent); }
+  .frame { position: relative; display: block; width: 100%; max-width: 420px; margin: 0 auto; padding: 2px;
+    background: linear-gradient(135deg, #ff2ee6, #7828ff 50%, #2ee6ff);
+    box-shadow: 0 0 32px rgba(120,40,255,.5), 0 0 80px rgba(255,46,230,.16); }
   .frame img { display: block; width: 100%; background: var(--surface); }
   .btn { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 420px;
     height: 52px; margin: 14px auto 0; padding: 0 20px; border: 0; cursor: pointer; text-decoration: none;
@@ -319,24 +330,43 @@ STYLE = """
   .reveal { animation: reveal .7s var(--ease) var(--d, 0s) both; }
   @keyframes reveal { from { opacity: 0; filter: blur(4px); transform: translateY(14px); } }
   @keyframes sweep { 0% { background-position: 150% 0; } to { background-position: -50% 0; } }
-  @media (prefers-reduced-motion: reduce) { .reveal, .skeleton, .sign-echo { animation: none !important; } }
+  .rail { position: relative; height: 52px; max-width: 520px; margin: 40px auto 0; overflow: hidden;
+    border-bottom: 2px solid rgba(219,196,255,.22); }
+  .rail img { position: absolute; bottom: 4px; left: -340px; height: 44px; animation: ride 11s linear infinite; }
+  @keyframes ride { to { left: 100%; } }
+  .lineart { display: block; width: 100%; max-width: 900px; margin: 0 auto; opacity: .3; mix-blend-mode: screen; }
+  @media (prefers-reduced-motion: reduce) { .reveal, .skeleton, .sign-echo, .rail img, .peek img { animation: none !important; } }
 </style>
 """
 
-PENDING = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>
+PENDING = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>{title}</title>
 <meta http-equiv="refresh" content="8">""" + STYLE + """</head><body>
+<div class="scene" aria-hidden="true"></div>
 <div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
 <div class="frame skeleton reveal" style="--d:90ms; aspect-ratio: 2 / 3"></div>
 <p class="reveal" style="--d:.18s">Your photo is on its way. This page will refresh by itself in a few seconds.</p>
 </body></html>"""
 
-PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """</head><body>
+PAGE = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>{title}</title>""" + STYLE + """</head><body>
+<div class="scene" aria-hidden="true"></div>
 <div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
 <p id="tagline" class="reveal" style="--d:45ms" hidden>Share to your story and tag us! <b id="handle"></b></p>
-<div class="frame reveal" style="--d:90ms"><img src="{photo}" alt="Your photobooth picture"></div>
+<div class="stage reveal" style="--d:90ms">
+  <div class="peek" aria-hidden="true"><img src="/assets/poyo.webp" alt=""></div>
+  <div class="frame"><img src="{photo}" alt="Your photobooth picture"></div>
+</div>
 <button id="share" class="btn ig reveal" style="--d:.18s" disabled><span>Share to Instagram Story</span></button>
 <a class="btn dl reveal" style="--d:.22s" href="{download}"><span>Download photo</span></a>
-<a class="btn gal reveal" style="--d:.27s" href="/"><span>View gallery</span></a>
+<a class="btn gal reveal" style="--d:.27s" href="/"><span>See everyone's photos</span></a>
+<div class="rail" aria-hidden="true"><img src="/assets/train.webp" alt=""></div>
+<img class="lineart" src="/assets/lineart.webp" alt="" aria-hidden="true">
+<style>
+  .stage { position: relative; max-width: 420px; margin: calc(min(100vw - 40px, 420px) * .2) auto 0; }
+  .peek { position: absolute; right: 7%; bottom: 100%; width: 30%; aspect-ratio: 500 / 358; overflow: hidden; margin-bottom: -1px; }
+  .peek img { display: block; width: 100%; animation: peek .9s var(--ease) .6s both; }
+  @keyframes peek { from { transform: translateY(102%); } }
+  .rail { margin-top: 36px; }
+</style>
 <script>
   const shareBtn = document.getElementById("share");
   let file = null;
@@ -360,22 +390,43 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 </script>
 </body></html>"""
 
-GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """
+GALLERY = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>{title}</title>""" + STYLE + """
 <style>
   body { padding: 28px 12px 44px; }
-  .banner { max-width: 720px; margin-bottom: 28px; }
+  .banner { max-width: 640px; margin-bottom: 10px; }
+  .hero { max-width: 1100px; margin: 0 auto; }
+  .kicker { margin: 0 auto; color: var(--soft); font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  .crew { display: block; width: min(50vw, 230px); margin: 18px auto 0; filter: drop-shadow(0 0 24px rgba(120,40,255,.45)); }
+  .rail { margin: 6px auto 28px; max-width: 1100px; }
+  @media (min-width: 820px) {
+    .hero { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 32px; text-align: left; }
+    .hero .banner { margin: 0 0 12px; } .hero .kicker { margin: 0; font-size: 17px; }
+    .crew { width: 300px; margin: 0; }
+  }
   #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-width: 1100px; margin: 0 auto; }
   @media (min-width: 820px) { #grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; } }
   #grid > * { aspect-ratio: 2 / 3; }
-  #grid a { display: block; padding: 1px; background: rgba(255,255,255,.14); transition: background .3s, transform .12s var(--ease); }
-  #grid a:hover, #grid a:focus-visible { background: rgba(255,255,255,.42); outline: none; }
+  #grid a { display: block; padding: 2px; background: linear-gradient(135deg, rgba(255,46,230,.55), rgba(120,40,255,.55) 50%, rgba(46,230,255,.55));
+    transition: box-shadow .3s, transform .12s var(--ease); }
+  #grid a:hover, #grid a:focus-visible { box-shadow: 0 0 26px rgba(255,46,230,.45); outline: none; transform: translateY(-2px); }
   #grid a:active { transform: scale(.98); }
+  #grid { grid-auto-flow: dense; }
+  #grid a.wide { grid-column: span 2; aspect-ratio: auto; }
   #grid img { display: block; width: 100%; height: 100%; object-fit: contain; background: var(--surface); }
   #status { margin-top: 26px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 </style></head><body>
-<div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
+<div class="scene" aria-hidden="true"></div>
+<header class="hero">
+  <div>
+    <div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
+    <p class="kicker reveal" style="--d:60ms">Everyone's booth photos</p>
+  </div>
+  <img class="crew reveal" style="--d:120ms" src="/assets/mascots.webp" alt="Poyo, Condor, Hyperion, Octans and Remus">
+</header>
+<div class="rail" aria-hidden="true"><img src="/assets/train.webp" alt=""></div>
 <div id="grid"></div>
 <p id="status">Loading photos...</p>
+<img class="lineart" src="/assets/lineart.webp" alt="" aria-hidden="true" style="margin-top: 36px">
 <script>
   const grid = document.getElementById("grid");
   const status = document.getElementById("status");
@@ -400,6 +451,7 @@ GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
         img.src = p.src;
         img.loading = "lazy";
         img.alt = "";
+        img.onload = () => { if (img.naturalWidth > img.naturalHeight) a.classList.add("wide"); };
         a.appendChild(img);
         grid.appendChild(a);
       });
@@ -416,7 +468,7 @@ GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
 </script>
 </body></html>"""
 
-ADMIN = """<!doctype html><html><head><meta charset="utf-8"><title>Admin - {title}</title>
+ADMIN = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>Admin - {title}</title>
 <meta name="robots" content="noindex">""" + STYLE + """
 <style>
   body { padding: 28px 12px 44px; }
