@@ -1,6 +1,6 @@
 {
-  "name": "Sunset",
-  "order": 2,
+  "name": "Octans",
+  "order": 3,
   "orientation": "landscape",
   "photo": {
     "x": 60,
@@ -13,5 +13,5 @@
     "y": 890,
     "size": 240
   },
-  "story_bg": "#ff6b4a"
+  "story_bg": "#634ba2"
 }

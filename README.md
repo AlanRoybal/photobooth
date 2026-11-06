@@ -5,7 +5,7 @@ Raspberry Pi 5 touchscreen photobooth that prints framed 4x6 photos on a Canon S
 - `booth/` Flask server + full-screen touch UI (runs on the Pi)
 - `cloud/` AWS SAM stack: S3 bucket + Lambda behind an HTTP API (upload URLs, share pages, gallery), plus a Rekognition check that keeps flagged photos out of the gallery (moderation page at `/admin`)
 - `deploy/` Pi setup script, printer setup, systemd service, Chromium kiosk launcher
-- `frames-src/` frame tools (`preview_frames.py`, placeholder frame generator)
+- `frames-src/` frame tools (`preview_frames.py`, placeholder frame generator, and `zeroday/make_frames.py`, which builds the mascot frames and home screen from the designer PNGs)
 - `enclosure/` 3D-printed case for a Bambu X1C: ready-to-print 3MFs (AMS colors set) and STLs, print settings, hardware and assembly steps in `enclosure/README.txt`, fit checks in `cad-check.txt`, and `viewer.html`, a rotatable 3D preview (made just before the last tweak to the tower and paper tunnel)
 
 Setup steps are in [GUIDE.md](GUIDE.md).

@@ -1,5 +1,5 @@
 {
-  "name": "Classic",
+  "name": "Poyo",
   "order": 0,
   "orientation": "landscape",
   "photo": {
@@ -13,5 +13,5 @@
     "y": 890,
     "size": 240
   },
-  "story_bg": "#ffffff"
+  "story_bg": "#3b34a3"
 }

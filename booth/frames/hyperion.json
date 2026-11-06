@@ -1,6 +1,6 @@
 {
-  "name": "Midnight",
-  "order": 1,
+  "name": "Hyperion",
+  "order": 2,
   "orientation": "portrait",
   "photo": {
     "x": 80,
@@ -13,5 +13,5 @@
     "y": 1400,
     "size": 300
   },
-  "story_bg": "#14143a"
+  "story_bg": "#4b6263"
 }
