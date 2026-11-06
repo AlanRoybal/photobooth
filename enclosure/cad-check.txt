@@ -1,0 +1,67 @@
+== 1. static interference (mm^3) ==
+  done
+== 2. insertion paths (assembly order) ==
+  ok screen into tower (from +y, 120 mm)
+  ok bar_L (from +y, 120 mm)
+  ok bar_R (from +y, 120 mm)
+  ok camera onto posts (from +y, 120 mm)
+  ok crown onto tower (from +z, 60 mm)
+  ok sign into crown (from -y, 40 mm)
+  ok pi onto rear panel (from -y, 40 mm)
+  ok rear panel + pi into tower (from +y, 60 mm)
+  ok base_front into base_rear (from -y, 60 mm)
+  ok printer into bay (from +z, 100 mm)
+  ok tower assembly onto base (from +z, 60 mm)
+  ok paper cassette through photo slot (from -y, 220 mm)
+  ok lid (from +z, 60 mm)
+  ok ink cover (from +x, 30 mm)
+  ok paper tunnel (from +y, 60 mm)
+== 3. screws: holes line up and threads bite ==
+  ok  tower-base x-1 y30           M3.0x8  misalign 0.00  thread bite 10.0 mm^3
+  ok  tower-base x-1 y75           M3.0x8  misalign 0.00  thread bite 10.0 mm^3
+  ok  base front-rear x-1 z25      M3.0x8  misalign 0.00  thread bite 6.3 mm^3
+  ok  base front-rear x-1 z45      M3.0x8  misalign 0.00  thread bite 6.3 mm^3
+  ok  crown x-80                   M3.0x8  misalign 0.00  thread bite 10.8 mm^3
+  ok  rear panel x-1 z78           M3.0x8  misalign 0.00  thread bite 10.8 mm^3
+  ok  rear panel x-1 z252          M3.0x8  misalign 0.00  thread bite 10.8 mm^3
+  ok  screen bar x-1 z93           M3.0x10  misalign 0.00  thread bite 13.0 mm^3
+  ok  screen bar x-1 z207          M3.0x10  misalign 0.00  thread bite 13.0 mm^3
+  ok  camera x-1 z224              M2.0x5  misalign 0.00  thread bite 3.5 mm^3
+  ok  camera x-1 z236              M2.0x5  misalign 0.00  thread bite 3.5 mm^3
+  ok  tower-base x+1 y30           M3.0x8  misalign 0.00  thread bite 10.0 mm^3
+  ok  tower-base x+1 y75           M3.0x8  misalign 0.00  thread bite 10.0 mm^3
+  ok  base front-rear x+1 z25      M3.0x8  misalign 0.00  thread bite 6.3 mm^3
+  ok  base front-rear x+1 z45      M3.0x8  misalign 0.00  thread bite 6.3 mm^3
+  ok  crown x+80                   M3.0x8  misalign 0.00  thread bite 10.8 mm^3
+  ok  rear panel x+1 z78           M3.0x8  misalign 0.00  thread bite 10.8 mm^3
+  ok  rear panel x+1 z252          M3.0x8  misalign 0.00  thread bite 10.8 mm^3
+  ok  screen bar x+1 z93           M3.0x10  misalign 0.00  thread bite 13.0 mm^3
+  ok  screen bar x+1 z207          M3.0x10  misalign 0.00  thread bite 13.0 mm^3
+  ok  camera x+1 z224              M2.0x5  misalign 0.00  thread bite 3.5 mm^3
+  ok  camera x+1 z236              M2.0x5  misalign 0.00  thread bite 3.5 mm^3
+  ok  pi x-39 z174                 M2.5x6  misalign 0.00  thread bite 6.5 mm^3
+  ok  pi x-39 z222                 M2.5x6  misalign 0.00  thread bite 6.5 mm^3
+  ok  pi x19 z174                  M2.5x6  misalign 0.00  thread bite 6.5 mm^3
+  ok  pi x19 z222                  M2.5x6  misalign 0.00  thread bite 6.5 mm^3
+== 4. paper path behind printer ==
+  rear paper travel (234 to 414 mm): clash 0.0 mm^3
+  photo sticks out the front by 47 mm of 148
+== 5. printability (as oriented in the 3MFs) ==
+  01_tower__tower.stl                            fits=True watertight=True overhang   1182 mm^2, widest   5.0 mm, longest strip/bridge  30.0 mm
+  01_tower__tower_cyan.stl                       fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  01_tower__tower_magenta.stl                    fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  02_tower_rear_panel__tower_rear_panel.stl      fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  03_screen_retainer_bars_x2__retainer_bar_left.stl fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  03_screen_retainer_bars_x2__retainer_bar_right.stl fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  04_base_front__base_cyan.stl                   fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  04_base_front__base_front.stl                  fits=True watertight=True overhang    682 mm^2, widest   3.2 mm, longest strip/bridge 200.0 mm
+  05_base_rear__base_rear.stl                    fits=True watertight=True overhang     32 mm^2, widest   2.4 mm, longest strip/bridge   3.0 mm
+  06_lid__lid.stl                                fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  07_ink_door_cover__ink_cover.stl               fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  08_crown__crown.stl                            fits=True watertight=True overhang   6293 mm^2, widest  24.0 mm, longest strip/bridge 228.4 mm
+  09_title_sign__sign.stl                        fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  09_title_sign__sign_cyan.stl                   fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  09_title_sign__sign_magenta.stl                fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  09_title_sign__sign_white.stl                  fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+  10_rear_paper_tunnel__paper_tunnel.stl         fits=True watertight=True overhang      0 mm^2, widest   0.0 mm, longest strip/bridge   0.0 mm
+== FAILS == none
