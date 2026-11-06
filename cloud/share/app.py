@@ -31,7 +31,7 @@ for _name, _ctype in (("title.png", "image/png"),):
 SITE_ASSETS = {}
 for _name in os.listdir(os.path.join(os.path.dirname(__file__), "assets")):
     with open(os.path.join(os.path.dirname(__file__), "assets", _name), "rb") as f:
-        SITE_ASSETS[_name] = ("image/webp", base64.b64encode(f.read()).decode())
+        SITE_ASSETS[_name] = ("image/png" if _name.endswith(".png") else "image/webp", base64.b64encode(f.read()).decode())
 
 
 
@@ -339,7 +339,7 @@ STYLE = """
 </style>
 """
 
-PENDING = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>
+PENDING = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>{title}</title>
 <meta http-equiv="refresh" content="8">""" + STYLE + """</head><body>
 <div class="scene" aria-hidden="true"></div>
 <div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
@@ -347,7 +347,7 @@ PENDING = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
 <p class="reveal" style="--d:.18s">Your photo is on its way. This page will refresh by itself in a few seconds.</p>
 </body></html>"""
 
-PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """</head><body>
+PAGE = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>{title}</title>""" + STYLE + """</head><body>
 <div class="scene" aria-hidden="true"></div>
 <div class="banner reveal"><img src="/title.png" alt="{title}"><img class="sign-echo" src="/title.png" alt="" aria-hidden="true"></div>
 <p id="tagline" class="reveal" style="--d:45ms" hidden>Share to your story and tag us! <b id="handle"></b></p>
@@ -390,7 +390,7 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title
 </script>
 </body></html>"""
 
-GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>""" + STYLE + """
+GALLERY = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>{title}</title>""" + STYLE + """
 <style>
   body { padding: 28px 12px 44px; }
   .banner { max-width: 640px; margin-bottom: 10px; }
@@ -468,7 +468,7 @@ GALLERY = """<!doctype html><html><head><meta charset="utf-8"><title>{title}</ti
 </script>
 </body></html>"""
 
-ADMIN = """<!doctype html><html><head><meta charset="utf-8"><title>Admin - {title}</title>
+ADMIN = """<!doctype html><html><head><meta charset="utf-8"><link rel="icon" type="image/png" href="/assets/favicon.png"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><title>Admin - {title}</title>
 <meta name="robots" content="noindex">""" + STYLE + """
 <style>
   body { padding: 28px 12px 44px; }
