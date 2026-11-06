@@ -22,6 +22,8 @@
       </div>
     </div>
     <button id="go" class="pill primary a" style="--x:512px;--y:536px">Tap to start</button>
+    <div id="staff-corner"></div>
+    <div id="net-chip" hidden></div>
   </section>
 
   <section id="instructions" class="screen bg">
@@ -92,8 +94,70 @@
     <p class="big a" style="--x:512px;--y:430px">Going back to the start in <span id="idle-left"></span> seconds.</p>
     <p class="a" style="--x:512px;--y:474px">Tap anywhere to keep going.</p>
   </div>
+
+  <div id="staff" hidden>
+    <div id="staff-pin" class="sv">
+      <h2>Staff settings</h2>
+      <p id="pin-msg"></p>
+      <div id="pin-dots"></div>
+      <div id="pinpad"></div>
+      <button id="pin-cancel" class="pill secondary small">Cancel</button>
+    </div>
+
+    <div id="staff-main" class="sv" hidden>
+      <header><h2>Staff settings</h2><span id="st-note"></span><button id="staff-close" class="pill primary small">Close</button></header>
+      <div class="cols">
+        <div class="card">
+          <dl>
+            <dt>Wi-Fi</dt><dd id="st-wifi"></dd>
+            <dt>Internet</dt><dd id="st-internet"></dd>
+            <dt>Printer</dt><dd><span id="st-printer"></span> <button id="st-printer-check" class="link">Check</button></dd>
+            <dt>Waiting to upload</dt><dd id="st-pending"></dd>
+            <dt>IP address</dt><dd id="st-ip"></dd>
+            <dt>Wi-Fi MAC</dt><dd id="st-mac"></dd>
+          </dl>
+          <button id="st-portal" class="pill primary small" hidden>Open sign-in page</button>
+          <button id="st-off" class="pill secondary small">Shut down</button>
+        </div>
+        <div class="card nets">
+          <div class="head"><b>Wi-Fi networks</b><span id="net-page"></span>
+            <button id="net-up" class="circle">&#9650;</button><button id="net-down" class="circle">&#9660;</button>
+            <button id="net-rescan" class="pill secondary small">Scan</button></div>
+          <ul id="net-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="staff-join" class="sv" hidden>
+      <header><button id="join-back" class="pill secondary small">&#8592; Back</button><h2 id="join-title"></h2></header>
+      <p id="join-hint"></p>
+      <div class="fields">
+        <div id="field-user" class="field"><span>Username</span><b></b></div>
+        <div id="field-pass" class="field"><span>Password</span><b></b></div>
+        <button id="join-reveal" class="link"></button>
+      </div>
+      <div class="actions">
+        <div id="join-saved"><button id="join-forget" class="pill secondary small">Forget</button></div>
+        <span id="join-msg"></span>
+        <button id="join-use" class="pill secondary small">Connect with saved</button>
+        <button id="join-connect" class="pill primary small">Connect</button>
+      </div>
+      <div id="osk"></div>
+    </div>
+
+    <div id="staff-portal" class="sv" hidden>
+      <header><button id="portal-done" class="pill primary small">Done</button><p>Sign in to the venue Wi-Fi below, then tap Done.</p></header>
+      <iframe id="staff-frame" src="about:blank"></iframe>
+    </div>
+
+    <div id="staff-off" class="sv" hidden>
+      <h2>Shutting down</h2>
+      <p>Wait until the Pi's green light stops blinking, then unplug it.</p>
+    </div>
+  </div>
 </div>
 
 <script src="/static/app.js"></script>
+<script src="/static/staff.js"></script>
 </body>
 </html>

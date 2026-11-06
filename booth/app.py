@@ -1,4 +1,5 @@
 import base64
+import functools
 import io
 import secrets
 import threading
@@ -7,6 +8,7 @@ from flask import Flask, Response, abort, jsonify, request, send_from_directory
 
 import compose
 import config
+import network
 from camera import Camera
 from printer import print_file
 from uploader import Uploader
@@ -32,6 +34,7 @@ camera = Camera(rotate_180=cfg["camera_rotate_180"], ev=cfg["camera_ev"])
 uploader = Uploader(PRINTS, cfg["upload_api_url"], cfg["booth_key"])
 frames = {f.id: f for f in compose.load_frames(FRAMES_DIR)}
 capture_lock = threading.Lock()
+internet = network.Internet()
 
 
 def new_id(n=8):
@@ -155,6 +158,82 @@ def print_file_route(print_id, name):
     if not print_id.isalnum():
         abort(404)
     return send_from_directory(PRINTS / print_id, name)
+
+
+def pending_uploads():
+    return len(list(PRINTS.glob("*/pending")))
+
+
+@app.get("/api/net")
+def net_brief():
+    return jsonify({"internet": internet.state, "pending": pending_uploads()})
+
+
+def staff(view):
+    @functools.wraps(view)
+    def check(*args, **kwargs):
+        pin = cfg["staff_pin"]
+        if pin and not secrets.compare_digest(request.headers.get("X-Staff-Pin", ""), pin):
+            return jsonify({"error": "Wrong PIN"}), 401
+        return view(*args, **kwargs)
+    return check
+
+
+def staff_result(error):
+    internet.wake.set()
+    return (jsonify({"error": error}), 400) if error else jsonify({"ok": True})
+
+
+@app.get("/api/staff/status")
+@staff
+def staff_status():
+    return jsonify({**network.status(), "internet": internet.state, "portal_url": internet.portal_url,
+                    "pending": pending_uploads()})
+
+
+@app.get("/api/staff/printer")
+@staff
+def staff_printer():
+    return jsonify({"found": network.printer_found()})
+
+
+@app.get("/api/staff/networks")
+@staff
+def staff_networks():
+    return jsonify(network.networks())
+
+
+@app.post("/api/staff/connect")
+@staff
+def staff_connect():
+    body = request.get_json(force=True)
+    return staff_result(network.connect(str(body.get("ssid", "")), str(body.get("kind", "")),
+                                        str(body.get("password", "")), str(body.get("username", ""))))
+
+
+@app.post("/api/staff/use")
+@staff
+def staff_use():
+    return staff_result(network.use(str(request.get_json(force=True).get("uuid", ""))))
+
+
+@app.post("/api/staff/forget")
+@staff
+def staff_forget():
+    return staff_result(network.forget(str(request.get_json(force=True).get("uuid", ""))))
+
+
+@app.post("/api/staff/recheck")
+@staff
+def staff_recheck():
+    return jsonify({"internet": internet.check(), "portal_url": internet.portal_url})
+
+
+@app.post("/api/staff/shutdown")
+@staff
+def staff_shutdown():
+    threading.Thread(target=network.shutdown, daemon=True).start()
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":

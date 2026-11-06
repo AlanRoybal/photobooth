@@ -26,6 +26,7 @@ DEFAULTS = {
     "booth_key": "",
     "screen_rotate_180": False,
     "screen_tilt_deg": 0.0,
+    "staff_pin": "",
 }
 
 
