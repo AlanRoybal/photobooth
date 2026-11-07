@@ -10,12 +10,14 @@ import compose
 import config
 import network
 from camera import Camera
-from printer import print_file
+from printer import job_status, print_file
+from printer_alerts import PrinterAlerts
 from uploader import Uploader
 
 cfg = config.load()
 CAPTURES = config.DATA_DIR / "captures"
 PRINTS = config.DATA_DIR / "prints"
+print_jobs = {}
 FRAMES_DIR = config.ROOT / "frames"
 for d in (CAPTURES, PRINTS):
     d.mkdir(parents=True, exist_ok=True)
@@ -35,6 +37,7 @@ uploader = Uploader(PRINTS, cfg["upload_api_url"], cfg["booth_key"])
 frames = {f.id: f for f in compose.load_frames(FRAMES_DIR)}
 capture_lock = threading.Lock()
 internet = network.Internet()
+printer_alerts = PrinterAlerts(cfg, config.DATA_DIR / "printer-state.json")
 
 
 def new_id(n=8):
@@ -140,9 +143,12 @@ def confirm():
     clear_captures()
 
     error = None
+    job = ""
     if cfg["print_enabled"]:
         try:
-            print_file(out / "print.jpg", cfg["printer_name"], cfg["print_options"])
+            job = print_file(out / "print.jpg", cfg["printer_name"], cfg["print_options"])
+            print_jobs[print_id] = job
+            printer_alerts.printed()
         except Exception as e:
             error = str(e)
             print(f"print failed: {error}")
@@ -150,7 +156,21 @@ def confirm():
     printed.resize((printed.width // 2, printed.height // 2), compose.Image.LANCZOS).save(buf, "JPEG", quality=85)
     image = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
     uploader.enqueue(out)
-    return jsonify({"print_id": print_id, "image": image, "print_error": error})
+    return jsonify({"print_id": print_id, "image": image, "print_error": error, "print_job": job})
+
+
+@app.get("/api/print-status/<print_id>")
+def print_status(print_id):
+    job = print_jobs.get(print_id)
+    if not job:
+        return jsonify({"state": "done", "detail": ""})
+    try:
+        state, detail = job_status(job, cfg["printer_name"])
+    except Exception as e:
+        state, detail = "printing", str(e)
+    if state == "done":
+        print_jobs.pop(print_id, None)
+    return jsonify({"state": state, "detail": detail})
 
 
 @app.get("/prints/<print_id>/<name>")
@@ -188,7 +208,15 @@ def staff_result(error):
 @staff
 def staff_status():
     return jsonify({**network.status(), "internet": internet.state, "portal_url": internet.portal_url,
-                    "pending": pending_uploads()})
+                    "pending": pending_uploads(), "ink_left": printer_alerts.ink_left(),
+                    "printer_problems": sorted(printer_alerts.active)})
+
+
+@app.post("/api/staff/ink-replaced")
+@staff
+def staff_ink_replaced():
+    printer_alerts.ink_replaced()
+    return jsonify({"ok": True})
 
 
 @app.get("/api/staff/printer")

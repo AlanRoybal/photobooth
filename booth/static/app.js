@@ -388,6 +388,21 @@ function paperAt(cy, w, r, clipY) {
   paper.style.width = `${w}px`;
   set(paper, { x: 512, y: cy, r, o: 1 });
 }
+const PRINT_TIMEOUT_MS = 240000;
+async function waitForPrint(d) {
+  if (!d || d.print_error || !d.print_job) return;
+  const deadline = Date.now() + PRINT_TIMEOUT_MS;
+  let errors = 0;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const s = await fetch(`/api/print-status/${d.print_id}`).then((r) => r.json()).catch(() => null);
+    if (!s) continue;
+    if (s.state === "done") return;
+    errors = s.state === "error" ? errors + 1 : 0;
+    if (errors >= 3) { d.print_stuck = s.detail || "printer error"; return; }
+  }
+  d.print_stuck = "timed out";
+}
 async function confirmPrint() {
   if (state.lock) return;
   state.lock = true;
@@ -400,7 +415,7 @@ async function confirmPrint() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ capture_id: state.captureId, frame_id: frame.id }),
-  }).then((r) => r.json()).then((d) => (data = d)).catch((e) => console.error(e));
+  }).then((r) => r.json()).then((d) => (data = d)).then(waitForPrint).catch((e) => console.error(e));
 
   const land = state.orientation === "landscape";
   const pw = land ? 180 : 120, ph = land ? 120 : 180, fw = CARD_W[state.orientation];
@@ -451,7 +466,12 @@ async function confirmPrint() {
 
   $("final").src = data.image;
   await $("final").decode().catch(() => {});
-  if (data.print_error) {
+  if (data.print_stuck) console.warn("print stuck:", data.print_stuck);
+  const printFailed = data.print_error || data.print_stuck;
+  if (data.print_stuck) {
+    $("done-title").textContent = "Printer needs help";
+    $("done-msg").textContent = "Your photo was saved. Ask a staff member, and your print will come out once the printer is fixed.";
+  } else if (data.print_error) {
     $("done-title").textContent = "Printer problem";
     $("done-msg").textContent = "Your photo was saved but did not print. Ask a staff member for help.";
   } else {
@@ -459,7 +479,7 @@ async function confirmPrint() {
     $("done-msg").textContent = "Scan its QR code to download it or share it to your story.";
   }
   screenOn("done");
-  $("check").style.display = data.print_error ? "none" : "";
+  $("check").style.display = printFailed ? "none" : "";
   set($("done"), { bga: 0 });
   const doneW = land ? 270 : 180;
   const loopEnd = t0;
@@ -482,7 +502,7 @@ async function confirmPrint() {
     set($("check"), { s: spring(t, 0.9, 0.5, 0.5), r: -25 * (1 - spring(t, 0.9, 0.6, 0.55)) });
     const r = eoc(prog(t, 0.5, 0.95));
     set($("done").querySelector(".cap"), { dy: 36 * (1 - r), o: r });
-    $("progress").classList.toggle("complete", t >= 0.6 && !data.print_error);
+    $("progress").classList.toggle("complete", t >= 0.6 && !printFailed);
     set($("finish"), rise(spring(t, 0.8, 0.6, 0.65), prog(t, 0.8, 1.05)));
   });
   $("printing").classList.remove("on");
