@@ -10,12 +10,13 @@ import compose
 import config
 import network
 from camera import Camera
-from printer import print_file
+from printer import job_status, print_file
 from uploader import Uploader
 
 cfg = config.load()
 CAPTURES = config.DATA_DIR / "captures"
 PRINTS = config.DATA_DIR / "prints"
+print_jobs = {}
 FRAMES_DIR = config.ROOT / "frames"
 for d in (CAPTURES, PRINTS):
     d.mkdir(parents=True, exist_ok=True)
@@ -140,9 +141,11 @@ def confirm():
     clear_captures()
 
     error = None
+    job = ""
     if cfg["print_enabled"]:
         try:
-            print_file(out / "print.jpg", cfg["printer_name"], cfg["print_options"])
+            job = print_file(out / "print.jpg", cfg["printer_name"], cfg["print_options"])
+            print_jobs[print_id] = job
         except Exception as e:
             error = str(e)
             print(f"print failed: {error}")
@@ -150,7 +153,21 @@ def confirm():
     printed.resize((printed.width // 2, printed.height // 2), compose.Image.LANCZOS).save(buf, "JPEG", quality=85)
     image = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
     uploader.enqueue(out)
-    return jsonify({"print_id": print_id, "image": image, "print_error": error})
+    return jsonify({"print_id": print_id, "image": image, "print_error": error, "print_job": job})
+
+
+@app.get("/api/print-status/<print_id>")
+def print_status(print_id):
+    job = print_jobs.get(print_id)
+    if not job:
+        return jsonify({"state": "done", "detail": ""})
+    try:
+        state, detail = job_status(job, cfg["printer_name"])
+    except Exception as e:
+        state, detail = "printing", str(e)
+    if state == "done":
+        print_jobs.pop(print_id, None)
+    return jsonify({"state": state, "detail": detail})
 
 
 @app.get("/prints/<print_id>/<name>")
