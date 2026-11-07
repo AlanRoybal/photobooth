@@ -61,6 +61,9 @@
       $("st-wifi").textContent = d.ssid ? `${d.ssid}${d.signal ? ` (${d.signal}%)` : ""}` : "Not connected";
       $("st-internet").textContent = INTERNET[d.internet] || d.internet;
       $("st-internet").className = d.internet === "online" ? "good" : "bad";
+      const probs = d.printer_problems || [];
+      $("st-ink").textContent = `about ${d.ink_left} prints left${probs.length ? ` · ${probs.join(", ")}` : ""}`;
+      $("st-ink").className = probs.length || d.ink_left <= 5 ? "bad" : "";
       $("st-pending").textContent = d.pending;
       $("st-pending").className = d.pending && d.internet !== "online" ? "bad" : "";
       $("st-ip").textContent = d.ip || "-";
@@ -267,6 +270,7 @@
     $("net-up").addEventListener("click", () => { S.page--; paintNets(); });
     $("net-down").addEventListener("click", () => { S.page++; paintNets(); });
     $("st-printer-check").addEventListener("click", checkPrinter);
+    $("st-ink-new").addEventListener("click", () => api("/api/staff/ink-replaced", {}).then(refreshStatus).catch(() => {}));
     $("st-portal").addEventListener("click", portal);
     $("st-off").addEventListener("click", shutdown);
     $("join-back").addEventListener("click", () => { if (!S.busy) main(); });

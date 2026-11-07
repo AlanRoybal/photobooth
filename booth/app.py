@@ -11,6 +11,7 @@ import config
 import network
 from camera import Camera
 from printer import job_status, print_file
+from printer_alerts import PrinterAlerts
 from uploader import Uploader
 
 cfg = config.load()
@@ -36,6 +37,7 @@ uploader = Uploader(PRINTS, cfg["upload_api_url"], cfg["booth_key"])
 frames = {f.id: f for f in compose.load_frames(FRAMES_DIR)}
 capture_lock = threading.Lock()
 internet = network.Internet()
+printer_alerts = PrinterAlerts(cfg, config.DATA_DIR / "printer-state.json")
 
 
 def new_id(n=8):
@@ -146,6 +148,7 @@ def confirm():
         try:
             job = print_file(out / "print.jpg", cfg["printer_name"], cfg["print_options"])
             print_jobs[print_id] = job
+            printer_alerts.printed()
         except Exception as e:
             error = str(e)
             print(f"print failed: {error}")
@@ -205,7 +208,15 @@ def staff_result(error):
 @staff
 def staff_status():
     return jsonify({**network.status(), "internet": internet.state, "portal_url": internet.portal_url,
-                    "pending": pending_uploads()})
+                    "pending": pending_uploads(), "ink_left": printer_alerts.ink_left(),
+                    "printer_problems": sorted(printer_alerts.active)})
+
+
+@app.post("/api/staff/ink-replaced")
+@staff
+def staff_ink_replaced():
+    printer_alerts.ink_replaced()
+    return jsonify({"ok": True})
 
 
 @app.get("/api/staff/printer")
